@@ -30,6 +30,16 @@ func getAPIRecords(w http.ResponseWriter, r *http.Request) {
 	respond(w, records)
 }
 
+func getAPILatest(w http.ResponseWriter, r *http.Request) {
+	latest, err := getLatestRecord()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	respond(w, latest)
+}
+
 func getIndex(w http.ResponseWriter, r *http.Request) {
 	latest, err := getLatestRecord()
 	if err != nil {
@@ -63,9 +73,11 @@ func getServeMux() *http.ServeMux {
 		log.Fatalln("Errore nel caricamento delle condizioni:", err)
 	}
 
+	// init router
 	s := http.NewServeMux()
 
 	s.HandleFunc("GET /api/records", getAPIRecords)
+	s.HandleFunc("GET /api/latest", getAPILatest)
 
 	s.HandleFunc("GET /", getIndex)
 	s.HandleFunc("GET /records", getRecords)

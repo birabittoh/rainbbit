@@ -40,7 +40,7 @@ type Record struct {
 	Snow1H float64 `json:"snow_1h"`
 
 	// Relazione 1 a N con WeatherRecord
-	Weather []Weather `json:"weather" gorm:"foreignKey:RecordDt"`
+	Weather []Weather `json:"-" gorm:"foreignKey:RecordDt"`
 
 	Conditions []Condition `json:"conditions" gorm:"-"`
 	Favicon    string      `json:"-" gorm:"-"`
