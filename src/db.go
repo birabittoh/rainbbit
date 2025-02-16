@@ -1,22 +1,17 @@
 package src
 
-import (
-	"log"
-	"time"
-)
-
 // ------------------------
 // MODELLI GORM
 // ------------------------
 
 // Record rappresenta i dati meteo completi (tranne la slice Weather, salvata separatamente)
 type Record struct {
-	Dt         time.Time `json:"dt" gorm:"primarykey"`
-	Visibility int       `json:"visibility"`
+	Dt         int64 `json:"dt" gorm:"primarykey"`
+	Visibility int   `json:"visibility"`
 
 	// Sys
-	Sunrise time.Time `json:"sunrise"`
-	Sunset  time.Time `json:"sunset"`
+	Sunrise int64 `json:"sunrise"`
+	Sunset  int64 `json:"sunset"`
 
 	// Main
 	Temp      float64 `json:"temp"`
@@ -45,36 +40,14 @@ type Record struct {
 	Conditions []Condition `json:"conditions" gorm:"-"`
 	Favicon    string      `json:"-" gorm:"-"`
 	Title      string      `json:"-" gorm:"-"`
+	TimeAgo    string      `json:"-" gorm:"-"`
 }
 
 // Weather rappresenta un elemento dell'array weather
 type Weather struct {
-	ID        uint      `json:"id" gorm:"primarykey"`
-	RecordDt  time.Time `json:"record_dt"`
-	WeatherID int       `json:"weather_id"`
-}
-
-func (record *Record) parseConditions() {
-	for _, w := range record.Weather {
-		c, ok := conditions[w.WeatherID]
-		if !ok {
-			log.Printf("Condizione meteo non trovata per ID %d\n", w.WeatherID)
-			continue
-		}
-
-		if record.Dt.After(record.Sunrise) && record.Dt.Before(record.Sunset) {
-			c.Icon += "d"
-		} else {
-			c.Icon += "n"
-		}
-
-		c.Description = capitalize(c.Description)
-
-		record.Conditions = append(record.Conditions, c)
-	}
-
-	record.Favicon = record.Conditions[0].Icon
-	record.Title = record.Conditions[0].Description
+	ID        uint `json:"id" gorm:"primarykey"`
+	RecordDt  uint `json:"record_dt"`
+	WeatherID int  `json:"weather_id"`
 }
 
 func getAllRecords() (records []Record, err error) {

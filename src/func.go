@@ -31,11 +31,11 @@ func fetchAndSaveWeather(db *gorm.DB, coords *openweathermap.Coordinates, apiKey
 
 	// Mappatura dei dati restituiti nel modello Record
 	record := Record{
-		Dt:         time.Unix(int64(current.Dt), 0),
+		Dt:         int64(current.Dt),
 		Visibility: current.Visibility,
 		// Sys
-		Sunrise: time.Unix(int64(current.Sys.Sunrise), 0),
-		Sunset:  time.Unix(int64(current.Sys.Sunset), 0),
+		Sunrise: int64(current.Sys.Sunrise),
+		Sunset:  int64(current.Sys.Sunset),
 		// Main
 		Temp:      current.Main.Temp,
 		TempMin:   current.Main.TempMin,

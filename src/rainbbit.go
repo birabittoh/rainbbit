@@ -86,6 +86,8 @@ func Main() {
 	c.Start()
 	log.Println("Scheduler avviato, in attesa di esecuzioni...")
 
+	// fetchAndSaveWeather(db, coords, apiKey, unit, lang)
+
 	// Blocca il main per mantenere il programma in esecuzione
 	mux := getServeMux()
 	log.Fatal(http.ListenAndServe(":"+port, mux))
