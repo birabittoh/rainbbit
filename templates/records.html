@@ -1,0 +1,41 @@
+{{ define "head" }}<title>History</title>{{ end }}
+{{ define "body" }}<table>
+    <thead>
+        <tr>
+            <th>Time</th>
+            <th>Temperature</th>
+            <th>Visibility</th>
+            <th>Temp Min</th>
+            <th>Temp Max</th>
+            <th>Feels Like</th>
+            <th>Pressure</th>
+            <th>Sea Level</th>
+            <th>Ground Level</th>
+            <th>Humidity</th>
+            <th>Wind Speed</th>
+            <th>Wind Degree</th>
+            <th>Clouds</th>
+            <th>Rain (1h)</th>
+            <th>Snow (1h)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{ range . }}<tr>
+            <td>{{ .Dt }}</td>
+            <td>{{ .Temp }}</td>
+            <td>{{ .Visibility }}</td>
+            <td>{{ .TempMin }}</td>
+            <td>{{ .TempMax }}</td>
+            <td>{{ .FeelsLike }}</td>
+            <td>{{ .Pressure }}</td>
+            <td>{{ .SeaLevel }}</td>
+            <td>{{ .GrndLevel }}</td>
+            <td>{{ .Humidity }}</td>
+            <td>{{ .WindSpeed }}</td>
+            <td>{{ .WindDeg }}</td>
+            <td>{{ .Clouds }}</td>
+            <td>{{ .Rain1H }}</td>
+            <td>{{ .Snow1H }}</td>
+        </tr>
+        {{ end }}</tbody>
+</table>{{ end }}

@@ -1,6 +1,9 @@
 package src
 
-import "time"
+import (
+	"log"
+	"time"
+)
 
 // ------------------------
 // MODELLI GORM
@@ -38,6 +41,8 @@ type Record struct {
 
 	// Relazione 1 a N con WeatherRecord
 	Weather []Weather `json:"weather" gorm:"foreignKey:RecordDt"`
+
+	Conditions []Condition `json:"conditions" gorm:"-"`
 }
 
 // Weather rappresenta un elemento dell'array weather
@@ -45,4 +50,29 @@ type Weather struct {
 	ID        uint      `json:"id" gorm:"primarykey"`
 	RecordDt  time.Time `json:"record_dt"`
 	WeatherID int       `json:"weather_id"`
+}
+
+func getAllRecords() (records []Record, err error) {
+	err = db.Preload("Weather").Find(&records).Error
+	return
+}
+
+func getLatestRecord() (record Record, err error) {
+	err = db.Preload("Weather").Last(&record).Error
+	for _, w := range record.Weather {
+		c, ok := conditions[w.WeatherID]
+		if !ok {
+			log.Printf("Condizione meteo non trovata per ID %d\n", w.WeatherID)
+			continue
+		}
+		// if record.Dt is after sunrise and before sunset, add "d" to icon, otherwise "n"
+		if record.Dt.After(record.Sunrise) && record.Dt.Before(record.Sunset) {
+			c.Icon += "d"
+		} else {
+			c.Icon += "n"
+		}
+
+		record.Conditions = append(record.Conditions, c)
+	}
+	return
 }

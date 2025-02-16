@@ -1,0 +1,54 @@
+{{ define "base" }}<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      body {
+          font-family: Arial, sans-serif;
+          background-color: #121212;
+          color: #e0e0e0;
+      }
+      .weather {
+          background-color: #1e1e1e;
+          padding: 20px;
+          border-radius: 10px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      }
+      .weather p {
+          margin: 10px 0;
+      }
+      .weather strong {
+          color: #ffffff;
+      }
+      .container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 20px;
+          flex-wrap: wrap;
+      }
+      .weather {
+        flex-grow: 0;
+        flex-basis: auto;
+        flex-shrink: 1;
+        max-width: 45%;
+      }
+      .conditions {
+        text-align: right;
+      }
+      @media (max-width: 768px) {
+          .weather {
+          max-width: 100%;
+          }
+          .conditions {
+          text-align: center;
+          }
+      }
+    </style>
+    {{ template "head" . }}
+  </head>
+  <body>
+    {{ template "body" . }}
+  </body>
+</html>{{ end }}

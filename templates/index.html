@@ -1,0 +1,25 @@
+{{ define "head" }}<title>Weather</title>{{ end }}
+{{ define "body" }}
+<div class="container">
+    <div class="weather">{{ range .Conditions }}
+        <div class="conditions">
+            <img src="http://openweathermap.org/img/wn/{{ .Icon }}@4x.png">
+            <p><strong>{{ .Name }}</strong>: {{ .Description }}</p>
+        </div>{{ end }}
+    </div>
+    <div class="weather">
+        <p><strong>Time:</strong> {{ .Dt }}</p>
+        <hr>
+        <p><strong>Humidity:</strong> {{ .Humidity }}%</p>
+        <p><strong>Temperature:</strong> {{ .Temp }}°C</p>
+        <p><strong>Min:</strong> {{ .TempMin }}°C</p>
+        <p><strong>Max:</strong> {{ .TempMax }}°C</p>
+        <p><strong>Feels Like:</strong> {{ .FeelsLike }}°C</p>
+        <hr>
+        <p><strong>Wind Speed:</strong> {{ .WindSpeed }}m/s</p>
+        <p><strong>Clouds:</strong> {{ .Clouds }}%</p>
+        <p><strong>Rain:</strong> {{ .Rain1H }}mm/h</p>
+        <p><strong>Snow:</strong> {{ .Snow1H }}mm/h</p>
+    </div>
+</div>
+{{ end }}
