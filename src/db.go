@@ -34,8 +34,8 @@ type Record struct {
 	Rain1H float64 `json:"rain_1h"`
 	Snow1H float64 `json:"snow_1h"`
 
-	// Relazione 1 a N con WeatherRecord
-	Weather []Weather `json:"-" gorm:"foreignKey:RecordDt"`
+	// ID numerici separati da ","
+	Weather string `json:"-"`
 
 	Conditions []Condition `json:"conditions" gorm:"-"`
 	Favicon    string      `json:"-" gorm:"-"`
@@ -43,15 +43,12 @@ type Record struct {
 	TimeAgo    string      `json:"-" gorm:"-"`
 }
 
-// Weather rappresenta un elemento dell'array weather
-type Weather struct {
-	ID        uint `json:"id" gorm:"primarykey"`
-	RecordDt  uint `json:"record_dt"`
-	WeatherID int  `json:"weather_id"`
-}
-
 func getAllRecords() (records []Record, err error) {
-	err = db.Preload("Weather").Find(&records).Error
+	err = db.Find(&records).Error
+	if err != nil {
+		return
+	}
+
 	for i := range records {
 		records[i].parseConditions()
 	}
@@ -59,7 +56,11 @@ func getAllRecords() (records []Record, err error) {
 }
 
 func getLatestRecord() (record Record, err error) {
-	err = db.Preload("Weather").Last(&record).Error
+	err = db.Last(&record).Error
+	if err != nil {
+		return
+	}
+
 	record.parseConditions()
 	return
 }

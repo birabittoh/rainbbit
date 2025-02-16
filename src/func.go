@@ -2,6 +2,7 @@ package src
 
 import (
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -55,11 +56,11 @@ func fetchAndSaveWeather(db *gorm.DB, coords *openweathermap.Coordinates, apiKey
 		Snow1H: current.Snow.OneH,
 	}
 
-	// Per ogni elemento dell'array Weather, creiamo un oggetto Weather
+	weatherIDs := []string{}
 	for _, w := range current.Weather {
-		wr := Weather{WeatherID: w.ID}
-		record.Weather = append(record.Weather, wr)
+		weatherIDs = append(weatherIDs, strconv.Itoa(w.ID))
 	}
+	record.Weather = strings.Join(weatherIDs, ",")
 
 	// Salvataggio nel database (includendo l'associazione Weathers)
 	if err := db.Create(&record).Error; err != nil {

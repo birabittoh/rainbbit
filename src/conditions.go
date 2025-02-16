@@ -4,19 +4,20 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
-var conditions map[int]Condition
+var conditions map[string]Condition
 
 type Condition struct {
-	ID          int    `json:"id"`
+	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Icon        string `json:"icon"`
 }
 
-func loadConditions() (map[int]Condition, error) {
+func loadConditions() (map[string]Condition, error) {
 	file, err := os.Open("conditions.json")
 	if err != nil {
 		return nil, err
@@ -36,10 +37,12 @@ func (record *Record) parseConditions() {
 	sunrise := time.Unix(record.Sunrise, 0)
 	sunset := time.Unix(record.Sunset, 0)
 
-	for _, w := range record.Weather {
-		c, ok := conditions[w.WeatherID]
+	weatherIDs := strings.Split(record.Weather, ",")
+
+	for _, w := range weatherIDs {
+		c, ok := conditions[w]
 		if !ok {
-			log.Printf("Condizione meteo non trovata per ID %d\n", w.WeatherID)
+			log.Printf("Condizione meteo non trovata per ID %s\n", w)
 			continue
 		}
 
@@ -49,7 +52,7 @@ func (record *Record) parseConditions() {
 			c.Icon += "n"
 		}
 
-		c.ID = w.WeatherID
+		c.ID = w
 		c.Description = capitalize(c.Description)
 
 		record.Conditions = append(record.Conditions, c)

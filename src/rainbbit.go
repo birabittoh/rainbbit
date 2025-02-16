@@ -65,8 +65,8 @@ func Main() {
 		log.Fatalln("Errore nell'apertura del database:", err)
 	}
 
-	// Migrazione degli schemi per i modelli Record e WeatherRecord
-	if err := db.AutoMigrate(&Record{}, &Weather{}); err != nil {
+	// Migrazione dello schema per il modello Record
+	if err := db.AutoMigrate(&Record{}); err != nil {
 		log.Fatalln("Errore nella migrazione del database:", err)
 	}
 
