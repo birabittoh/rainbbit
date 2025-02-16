@@ -2,12 +2,12 @@
 <link rel="icon" href="//openweathermap.org/img/wn/{{ .Favicon }}.png">{{ end }}
 {{ define "body" }}
 <div class="container">
-    <div class="weather">
-    <p style="text-align: center;">Last measured {{ .TimeAgo }} ago.</p>{{ range .Conditions }}
+    <div class="weather">{{ range .Conditions }}
         <div class="conditions">
-            <img src="//openweathermap.org/img/wn/{{ .Icon }}@4x.png" alt="{{ .Name }}" title="{{ .Name }}">
             <p><strong>{{ .Description }}</strong></p>
+            <img src="//openweathermap.org/img/wn/{{ .Icon }}@4x.png" alt="{{ .Name }}" title="{{ .Name }}">
         </div>{{ end }}
+    <p style="text-align: center;"><em>Last updated {{ .TimeAgo }} ago</em></p>
     </div>
     <div class="weather">
         <p><strong>Humidity:</strong> {{ .Humidity }}%</p>
