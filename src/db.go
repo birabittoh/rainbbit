@@ -43,6 +43,8 @@ type Record struct {
 	Weather []Weather `json:"weather" gorm:"foreignKey:RecordDt"`
 
 	Conditions []Condition `json:"conditions" gorm:"-"`
+	Favicon    string      `json:"-" gorm:"-"`
+	Title      string      `json:"-" gorm:"-"`
 }
 
 // Weather rappresenta un elemento dell'array weather
@@ -65,14 +67,19 @@ func getLatestRecord() (record Record, err error) {
 			log.Printf("Condizione meteo non trovata per ID %d\n", w.WeatherID)
 			continue
 		}
-		// if record.Dt is after sunrise and before sunset, add "d" to icon, otherwise "n"
+
 		if record.Dt.After(record.Sunrise) && record.Dt.Before(record.Sunset) {
 			c.Icon += "d"
 		} else {
 			c.Icon += "n"
 		}
 
+		c.Description = capitalize(c.Description)
+
 		record.Conditions = append(record.Conditions, c)
 	}
+
+	record.Favicon = record.Conditions[0].Icon
+	record.Title = record.Conditions[0].Description
 	return
 }

@@ -2,6 +2,7 @@ package src
 
 import (
 	"log"
+	"strings"
 	"time"
 
 	"github.com/briandowns/openweathermap"
@@ -66,4 +67,11 @@ func fetchAndSaveWeather(db *gorm.DB, coords *openweathermap.Coordinates, apiKey
 		return
 	}
 	log.Printf("Record salvato alle %s\n", time.Now().Format(time.RFC3339))
+}
+
+func capitalize(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
 }

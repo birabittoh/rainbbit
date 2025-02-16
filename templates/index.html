@@ -1,10 +1,11 @@
-{{ define "head" }}<title>Weather</title>{{ end }}
+{{ define "head" }}<title>{{ .Title }}</title>
+<link rel="icon" href="http://openweathermap.org/img/wn/{{ .Favicon }}.png">{{ end }}
 {{ define "body" }}
 <div class="container">
     <div class="weather">{{ range .Conditions }}
         <div class="conditions">
-            <img src="http://openweathermap.org/img/wn/{{ .Icon }}@4x.png">
-            <p><strong>{{ .Name }}</strong>: {{ .Description }}</p>
+            <img src="http://openweathermap.org/img/wn/{{ .Icon }}@4x.png" alt="{{ .Name }}" title="{{ .Name }}">
+            <p><strong>{{ .Description }}</strong></p>
         </div>{{ end }}
     </div>
     <div class="weather">
