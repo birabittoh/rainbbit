@@ -54,13 +54,7 @@ type Weather struct {
 	WeatherID int       `json:"weather_id"`
 }
 
-func getAllRecords() (records []Record, err error) {
-	err = db.Preload("Weather").Find(&records).Error
-	return
-}
-
-func getLatestRecord() (record Record, err error) {
-	err = db.Preload("Weather").Last(&record).Error
+func (record *Record) parseConditions() {
 	for _, w := range record.Weather {
 		c, ok := conditions[w.WeatherID]
 		if !ok {
@@ -81,5 +75,18 @@ func getLatestRecord() (record Record, err error) {
 
 	record.Favicon = record.Conditions[0].Icon
 	record.Title = record.Conditions[0].Description
+}
+
+func getAllRecords() (records []Record, err error) {
+	err = db.Preload("Weather").Find(&records).Error
+	for i := range records {
+		records[i].parseConditions()
+	}
+	return
+}
+
+func getLatestRecord() (record Record, err error) {
+	err = db.Preload("Weather").Last(&record).Error
+	record.parseConditions()
 	return
 }
