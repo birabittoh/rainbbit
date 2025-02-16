@@ -1,0 +1,9 @@
+services:
+  rainbbit:
+    image: ghcr.io/birabittoh/rainbbit:main
+    build: .
+    container_name: rainbbit
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
