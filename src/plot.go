@@ -107,7 +107,6 @@ func newDarkPlot(timestamps []time.Time) *plot.Plot {
 	p.X.Tick.Label.YAlign = 0
 	p.Title.TextStyle.Color = color.White
 	p.Legend.TextStyle.Color = color.White
-
 	return p
 }
 

@@ -9,9 +9,7 @@
             </p>
         </div>
     </div>
-    <div class="weather">
-        {{ range .Measures }}
-        <p><a href="/plot/{{ . }}">{{ . }}</a></p>
-        {{ end }}
+    <div class="weather">{{ range .Measures }}
+        <p><a href="/plot/{{ . }}">{{ . }}</a></p>{{ end }}
     </div>
 </div>{{ end }}

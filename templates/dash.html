@@ -1,10 +1,14 @@
 {{ define "head" }}<title>Temperature</title>{{ end }}
 {{ define "body" }}<div style="text-align: center;">
     <div class="plots">
-        <p>Temperature</p>
-        <img class="plot" src="/api/temp?from={{ .From }}&to={{ .To }}" alt="Could not display temp plot."><br />
-        <p>Humidity</p>
-        <img class="plot" src="/api/plot/humidity?from={{ .From }}&to={{ .To }}" alt="Could not display humidity plot."><br />
+        <div class="plot">
+            <p>Temperature</p>
+            <img src="/api/temp?from={{ .From }}&to={{ .To }}" alt="Could not display temp plot.">
+        </div>
+        <div class="plot">
+            <p>Humidity</p>
+            <img src="/api/plot/humidity?from={{ .From }}&to={{ .To }}" alt="Could not display humidity plot.">
+        </div>
     </div>
     <p>
         <a href="/dash">All</a>,
