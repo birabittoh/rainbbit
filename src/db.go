@@ -35,7 +35,7 @@ type Record struct {
 	Snow1H float64 `json:"snow_1h"`
 
 	// ID numerici separati da ","
-	Weather string `json:"-"`
+	Weather string `json:"weather"`
 
 	Conditions []Condition `json:"conditions" gorm:"-"`
 	Favicon    string      `json:"-" gorm:"-"`

@@ -3,8 +3,10 @@
     <thead>
         <tr>
             <th>Time</th>
-            <th>Temperature</th>
             <th>Visibility</th>
+            <th>Sunrise</th>
+            <th>Sunset</th>
+            <th>Temp</th>
             <th>Temp Min</th>
             <th>Temp Max</th>
             <th>Feels Like</th>
@@ -13,17 +15,20 @@
             <th>Ground Level</th>
             <th>Humidity</th>
             <th>Wind Speed</th>
-            <th>Wind Degree</th>
+            <th>Wind Degrees</th>
             <th>Clouds</th>
-            <th>Rain (1h)</th>
-            <th>Snow (1h)</th>
+            <th>Rain</th>
+            <th>Snow</th>
+            <th>Weather</th>
         </tr>
     </thead>
     <tbody>
         {{ range . }}<tr>
             <td>{{ .Dt }}</td>
-            <td>{{ .Temp }}</td>
             <td>{{ .Visibility }}</td>
+            <td>{{ .Sunrise }}</td>
+            <td>{{ .Sunset }}</td>
+            <td>{{ .Temp }}</td>
             <td>{{ .TempMin }}</td>
             <td>{{ .TempMax }}</td>
             <td>{{ .FeelsLike }}</td>
@@ -36,6 +41,7 @@
             <td>{{ .Clouds }}</td>
             <td>{{ .Rain1H }}</td>
             <td>{{ .Snow1H }}</td>
+            <td>{{ .Weather }}</td>
         </tr>
         {{ end }}</tbody>
 </table>{{ end }}

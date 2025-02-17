@@ -5,12 +5,16 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"path/filepath"
+	"os"
 )
 
-func templatePath(s string) string {
-	return filepath.Join("templates", s) + ".html"
-}
+const (
+	base = "base"
+
+	basePath    = "templates" + string(os.PathSeparator) + base + ".html"
+	indexPath   = "templates" + string(os.PathSeparator) + "index.html"
+	recordsPath = "templates" + string(os.PathSeparator) + "records.html"
+)
 
 var tmpl map[string]*template.Template
 
@@ -47,7 +51,7 @@ func getIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl[templatePath("index")].ExecuteTemplate(w, "base", latest)
+	tmpl[indexPath].ExecuteTemplate(w, base, latest)
 }
 
 func getRecords(w http.ResponseWriter, r *http.Request) {
@@ -57,14 +61,15 @@ func getRecords(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl[templatePath("records")].ExecuteTemplate(w, "base", records)
+	tmpl[recordsPath].ExecuteTemplate(w, base, records)
 }
 
 func getServeMux() *http.ServeMux {
 	// init templates
 	tmpl = make(map[string]*template.Template)
-	tmpl[templatePath("index")] = template.Must(template.ParseFiles(templatePath("index"), templatePath("base")))
-	tmpl[templatePath("records")] = template.Must(template.ParseFiles(templatePath("records"), templatePath("base")))
+
+	tmpl[indexPath] = template.Must(template.ParseFiles(indexPath, basePath))
+	tmpl[recordsPath] = template.Must(template.ParseFiles(recordsPath, basePath))
 
 	// init conditions
 	var err error
