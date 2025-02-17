@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 const (
@@ -22,10 +23,11 @@ const (
 var tmpl map[string]*template.Template
 
 type PlotData struct {
-	From     string
-	To       string
-	Measure  string
-	Measures []string
+	OneDayAgo int64
+	From      string
+	To        string
+	Measure   string
+	Measures  []string
 }
 
 func respond(w http.ResponseWriter, data interface{}) {
@@ -108,11 +110,14 @@ func getRecords(w http.ResponseWriter, r *http.Request) {
 
 func getPlot(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
+	now := time.Now()
+
 	pd := PlotData{
-		From:     q.Get("from"),
-		To:       q.Get("to"),
-		Measure:  r.PathValue("measure"),
-		Measures: measures,
+		OneDayAgo: now.Add(-24 * time.Hour).Unix(),
+		From:      q.Get("from"),
+		To:        q.Get("to"),
+		Measure:   r.PathValue("measure"),
+		Measures:  measures,
 	}
 
 	tmpl[plotPath].ExecuteTemplate(w, base, pd)

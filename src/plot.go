@@ -3,8 +3,6 @@ package src
 import (
 	"bytes"
 	"errors"
-	"slices"
-	"strings"
 
 	"image/color"
 
@@ -12,8 +10,16 @@ import (
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
 	"gonum.org/v1/plot/vg/draw"
-	"gorm.io/gorm"
 )
+
+type DataPoint struct {
+	Dt     float64
+	Value0 float64
+	Value1 float64
+	Value2 float64
+	Value3 float64
+	Value4 float64
+}
 
 func setAxisColor(axis *plot.Axis, color color.Color) {
 	axis.Color = color
@@ -23,30 +29,7 @@ func setAxisColor(axis *plot.Axis, color color.Color) {
 }
 
 func plotMeasure(measure string, from int64, to int64) (p *plot.Plot, err error) {
-	if !slices.Contains(measures, measure) {
-		err = errors.New("la misura richiesta non esiste")
-		return
-	}
-
-	query := db.Model(&Record{})
-	if from != 0 {
-		query = query.Where("dt >= ?", from)
-	}
-	if to != 0 {
-		query = query.Where("dt <= ?", to)
-	}
-	query = query.Session(&gorm.Session{})
-
-	timestamps := make([]int64, 0)
-	values := make([]float64, 0)
-
-	err = query.Pluck("dt", &timestamps).Error
-	if err != nil {
-		err = errors.New("errore nella lettura dei dati: " + err.Error())
-		return
-	}
-
-	err = query.Pluck(measure, &values).Error
+	dp, err := getDataPoints([]string{measure}, from, to)
 	if err != nil {
 		err = errors.New("errore nella lettura dei dati: " + err.Error())
 		return
@@ -55,18 +38,19 @@ func plotMeasure(measure string, from int64, to int64) (p *plot.Plot, err error)
 	// Plot the data
 	p = plot.New()
 
-	p.BackgroundColor = color.RGBA{R: 0, G: 0, B: 0, A: 0}
+	p.BackgroundColor = color.Transparent
 	setAxisColor(&p.X, color.White)
 	setAxisColor(&p.Y, color.White)
 
-	p.Title.TextStyle.Color = color.White
-	p.Title.Text = strings.ReplaceAll(capitalize(measure), "_", " ")
+	p.X.Tick.Marker = plot.TimeTicks{Format: "2006-01-02\n15:04:05"}
 
-	// Add the data to the plot (dt = x, measure = y)
-	pts := make(plotter.XYs, len(timestamps))
-	for i := range timestamps {
-		pts[i].X = float64(timestamps[i])
-		pts[i].Y = values[i]
+	p.Title.TextStyle.Color = color.White
+	p.Title.Text = measure
+
+	pts := make(plotter.XYs, len(dp))
+	for i := range dp {
+		pts[i].X = dp[i].Dt
+		pts[i].Y = dp[i].Value0
 	}
 
 	// Add the points to the plot
@@ -76,9 +60,9 @@ func plotMeasure(measure string, from int64, to int64) (p *plot.Plot, err error)
 		return
 	}
 
-	l.Color = color.RGBA{B: 255, A: 255}
-	s.Color = color.RGBA{B: 150, A: 255}
-	s.GlyphStyle.Shape = draw.TriangleGlyph{}
+	l.Color = color.Gray{Y: 128}
+	s.Color = color.Gray{Y: 128}
+	s.GlyphStyle.Shape = draw.CircleGlyph{}
 
 	p.Add(l)
 	p.Add(s)

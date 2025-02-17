@@ -4,6 +4,8 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
+	"strconv"
 	"sync"
 
 	"github.com/glebarez/sqlite"
@@ -80,6 +82,42 @@ func getLatestRecord() (record Record, err error) {
 	}
 
 	record.parseConditions()
+	return
+}
+
+func getDataPoints(measures []string, from int64, to int64) (dp []DataPoint, err error) {
+	for _, measure := range measures {
+		if !slices.Contains(measures, measure) {
+			err = errors.New("la misura richiesta non esiste")
+			return
+		}
+	}
+
+	if len(measures) > 5 {
+		err = errors.New("sono supportate al massimo 3 misure")
+		return
+	}
+
+	query := db.Model(&Record{})
+
+	selectText := "dt"
+	for i, measure := range measures {
+		selectText += ", " + measure + " as value" + strconv.Itoa(i)
+	}
+	query = query.Select(selectText)
+
+	if from != 0 {
+		query = query.Where("dt >= ?", from)
+	}
+	if to != 0 {
+		query = query.Where("dt <= ?", to)
+	}
+
+	err = query.Scan(&dp).Error
+	if err != nil {
+		err = errors.New("errore nella lettura dei dati: " + err.Error())
+		return
+	}
 	return
 }
 
