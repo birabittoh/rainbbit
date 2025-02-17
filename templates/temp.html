@@ -1,0 +1,10 @@
+{{ define "head" }}<title>Temperature</title>{{ end }}
+{{ define "body" }}<div class="container">
+    <div class="conditions">
+        <img src="/api/temp?from={{ .From }}&to={{ .To }}" alt="Could not display plot."><br />
+        <p>
+            <a href="/temp">All</a>,
+            <a href="/temp?from={{ .OneDayAgo }}">24h</a>
+        </p>
+    </div>
+</div>{{ end }}

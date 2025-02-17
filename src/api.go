@@ -18,6 +18,7 @@ const (
 	indexPath   = "templates" + ps + "index.html"
 	recordsPath = "templates" + ps + "records.html"
 	plotPath    = "templates" + ps + "plot.html"
+	tempPath    = "templates" + ps + "temp.html"
 )
 
 var tmpl map[string]*template.Template
@@ -77,7 +78,41 @@ func getAPIPlot(w http.ResponseWriter, r *http.Request) {
 		to = 0
 	}
 
-	buf, err := getPlotSVG(measure, from, to)
+	p, err := plotMeasure(measure, from, to)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	buf, err := getPlotSVG(p)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "image/svg+xml")
+	w.WriteHeader(http.StatusOK)
+	w.Write(buf.Bytes())
+}
+
+func getAPITemp(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	from, err := strconv.ParseInt(q.Get("from"), 10, 64)
+	if err != nil {
+		from = 0
+	}
+	to, err := strconv.ParseInt(q.Get("to"), 10, 64)
+	if err != nil {
+		to = 0
+	}
+
+	p, err := plotTemperature(from, to)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	buf, err := getPlotSVG(p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -123,6 +158,19 @@ func getPlot(w http.ResponseWriter, r *http.Request) {
 	tmpl[plotPath].ExecuteTemplate(w, base, pd)
 }
 
+func getTemp(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	now := time.Now()
+
+	pd := PlotData{
+		OneDayAgo: now.Add(-24 * time.Hour).Unix(),
+		From:      q.Get("from"),
+		To:        q.Get("to"),
+	}
+
+	tmpl[tempPath].ExecuteTemplate(w, base, pd)
+}
+
 func getServeMux() *http.ServeMux {
 	// init templates
 	tmpl = make(map[string]*template.Template)
@@ -130,6 +178,7 @@ func getServeMux() *http.ServeMux {
 	tmpl[indexPath] = template.Must(template.ParseFiles(indexPath, basePath))
 	tmpl[recordsPath] = template.Must(template.ParseFiles(recordsPath, basePath))
 	tmpl[plotPath] = template.Must(template.ParseFiles(plotPath, basePath))
+	tmpl[tempPath] = template.Must(template.ParseFiles(tempPath, basePath))
 
 	// init conditions
 	var err error
@@ -145,10 +194,12 @@ func getServeMux() *http.ServeMux {
 	s.HandleFunc("GET /api/latest", getAPILatest)
 	s.HandleFunc("GET /api/measures", getAPIMeasures)
 	s.HandleFunc("GET /api/plot/{measure}", getAPIPlot)
+	s.HandleFunc("GET /api/temp", getAPITemp)
 
 	s.HandleFunc("GET /", getIndex)
 	s.HandleFunc("GET /records", getRecords)
 	s.HandleFunc("GET /plot/{measure}", getPlot)
+	s.HandleFunc("GET /temp", getTemp)
 
 	return s
 }

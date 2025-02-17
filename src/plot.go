@@ -28,6 +28,21 @@ func setAxisColor(axis *plot.Axis, color color.Color) {
 	axis.Tick.Label.Color = color
 }
 
+func getPlotSVG(p *plot.Plot) (buf bytes.Buffer, err error) {
+	writer, err := p.WriterTo(4*vg.Inch, 4*vg.Inch, "svg")
+	if err != nil {
+		err = errors.New("errore nella creazione del writer SVG: " + err.Error())
+		return
+	}
+
+	_, err = writer.WriteTo(&buf)
+	if err != nil {
+		err = errors.New("errore nella scrittura del plot SVG: " + err.Error())
+		return
+	}
+	return
+}
+
 func plotMeasure(measure string, from int64, to int64) (p *plot.Plot, err error) {
 	dp, err := getDataPoints([]string{measure}, from, to)
 	if err != nil {
@@ -70,23 +85,84 @@ func plotMeasure(measure string, from int64, to int64) (p *plot.Plot, err error)
 	return
 }
 
-func getPlotSVG(measure string, from int64, to int64) (buf bytes.Buffer, err error) {
-	p, err := plotMeasure(measure, from, to)
+func addLines(p *plot.Plot, points plotter.XYs, color color.Color, dashed bool, label string) error {
+	l, s, err := plotter.NewLinePoints(points)
 	if err != nil {
-		err = errors.New("errore nella creazione del plot: " + err.Error())
+		return errors.New("Errore nella creazione del plot: " + err.Error())
+	}
+
+	if dashed {
+		l.Dashes = []vg.Length{vg.Points(5), vg.Points(5)}
+	}
+	l.Color = color
+	s.Color = color
+	s.GlyphStyle.Shape = draw.CircleGlyph{}
+
+	p.Add(l)
+	p.Add(s)
+
+	p.Legend.Add(label, l)
+	return nil
+}
+
+func plotTemperature(from int64, to int64) (p *plot.Plot, err error) {
+	dp, err := getDataPoints([]string{"temp", "temp_min", "temp_max", "feels_like"}, from, to)
+	if err != nil {
+		err = errors.New("errore nella lettura dei dati: " + err.Error())
 		return
 	}
 
-	writer, err := p.WriterTo(4*vg.Inch, 4*vg.Inch, "svg")
+	// Plot the data
+	p = plot.New()
+
+	p.BackgroundColor = color.Transparent
+	setAxisColor(&p.X, color.White)
+	setAxisColor(&p.Y, color.White)
+
+	p.X.Tick.Marker = plot.TimeTicks{Format: "2006-01-02\n15:04:05"}
+
+	p.Title.Text = "Temperature"
+	p.Title.TextStyle.Color = color.White
+	p.Legend.TextStyle.Color = color.White
+
+	tPts := make(plotter.XYs, len(dp))
+	tMinPts := make(plotter.XYs, len(dp))
+	tMaxPts := make(plotter.XYs, len(dp))
+	flPts := make(plotter.XYs, len(dp))
+	for i := range dp {
+		tPts[i].X = dp[i].Dt
+		tMinPts[i].X = dp[i].Dt
+		tMaxPts[i].X = dp[i].Dt
+		flPts[i].X = dp[i].Dt
+
+		tPts[i].Y = dp[i].Value0
+		tMinPts[i].Y = dp[i].Value1
+		tMaxPts[i].Y = dp[i].Value2
+		flPts[i].Y = dp[i].Value3
+	}
+
+	tColor := color.Gray{Y: 128}
+	tMinColor := color.RGBA{R: 0, G: 0, B: 255, A: 255}
+	tMaxColor := color.RGBA{R: 255, G: 0, B: 0, A: 255}
+	flColor := color.Gray{Y: 50}
+
+	// Add the plot points to the plot
+	err = addLines(p, tPts, tColor, false, "Temp")
 	if err != nil {
-		err = errors.New("errore nella creazione del writer SVG: " + err.Error())
+		return
+	}
+	err = addLines(p, tMinPts, tMinColor, false, "Min")
+	if err != nil {
+		return
+	}
+	err = addLines(p, tMaxPts, tMaxColor, false, "Max")
+	if err != nil {
+		return
+	}
+	err = addLines(p, flPts, flColor, true, "Feels Like")
+	if err != nil {
 		return
 	}
 
-	_, err = writer.WriteTo(&buf)
-	if err != nil {
-		err = errors.New("errore nella scrittura del plot SVG: " + err.Error())
-		return
-	}
 	return
 }
