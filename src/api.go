@@ -1,11 +1,15 @@
 package src
 
 import (
+	"bytes"
 	"encoding/json"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+
+	"gonum.org/v1/plot/vg"
 )
 
 const (
@@ -42,6 +46,52 @@ func getAPILatest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respond(w, latest)
+}
+
+func getAPIMeasures(w http.ResponseWriter, r *http.Request) {
+	respond(w, measures)
+}
+
+func getAPIPlot(w http.ResponseWriter, r *http.Request) {
+	measure := r.PathValue("measure")
+	if measure == "" {
+		http.Error(w, "Misura non specificata", http.StatusBadRequest)
+		return
+	}
+
+	q := r.URL.Query()
+	from, err := strconv.ParseInt(q.Get("from"), 10, 64)
+	if err != nil {
+		from = 0
+	}
+	to, err := strconv.ParseInt(q.Get("to"), 10, 64)
+	if err != nil {
+		to = 0
+	}
+
+	p, err := plotMeasure(measure, from, to)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Save the plot to an SVG file
+	writer, err := p.WriterTo(4*vg.Inch, 4*vg.Inch, "svg")
+	if err != nil {
+		http.Error(w, "Errore nella creazione del writer SVG", http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	_, err = writer.WriteTo(&buf)
+	if err != nil {
+		http.Error(w, "Errore nella scrittura del plot SVG", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "image/svg+xml")
+	w.WriteHeader(http.StatusOK)
+	w.Write(buf.Bytes())
 }
 
 func getIndex(w http.ResponseWriter, r *http.Request) {
@@ -83,6 +133,8 @@ func getServeMux() *http.ServeMux {
 
 	s.HandleFunc("GET /api/records", getAPIRecords)
 	s.HandleFunc("GET /api/latest", getAPILatest)
+	s.HandleFunc("GET /api/measures", getAPIMeasures)
+	s.HandleFunc("GET /api/plot/{measure}", getAPIPlot)
 
 	s.HandleFunc("GET /", getIndex)
 	s.HandleFunc("GET /records", getRecords)

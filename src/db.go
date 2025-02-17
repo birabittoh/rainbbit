@@ -1,5 +1,23 @@
 package src
 
+import (
+	"errors"
+	"os"
+	"path/filepath"
+	"sync"
+
+	"github.com/glebarez/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
+)
+
+const dataDir = "data"
+
+var (
+	db       *gorm.DB
+	measures []string
+)
+
 // ------------------------
 // MODELLI GORM
 // ------------------------
@@ -31,8 +49,8 @@ type Record struct {
 	Clouds int `json:"clouds_all"`
 
 	// Rain e Snow
-	Rain1H float64 `json:"rain_1h"`
-	Snow1H float64 `json:"snow_1h"`
+	Rain1H float64 `json:"rain_1h" gorm:"column:rain_1h"`
+	Snow1H float64 `json:"snow_1h" gorm:"column:snow_1h"`
 
 	// ID numerici separati da ","
 	Weather string `json:"weather"`
@@ -62,5 +80,38 @@ func getLatestRecord() (record Record, err error) {
 	}
 
 	record.parseConditions()
+	return
+}
+
+func initDB() (err error) {
+	// Assicuriamoci che la directory "data" esista
+	if err := os.MkdirAll(dataDir, os.ModePerm); err != nil {
+		return errors.New("Errore nella creazione della directory 'data': " + err.Error())
+	}
+
+	// Inizializzazione del database SQLite con GORM
+	dbPath := filepath.Join(dataDir, "data.sqlite?_pragma=foreign_keys(1)")
+	db, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	if err != nil {
+		return errors.New("Errore nell'apertura del database: " + err.Error())
+	}
+
+	// Migrazione dello schema per il modello Record
+	if err := db.AutoMigrate(&Record{}); err != nil {
+		return errors.New("Errore nella migrazione del database: " + err.Error())
+	}
+
+	// Inizializzazione delle colonne
+	s, err := schema.Parse(&Record{}, &sync.Map{}, schema.NamingStrategy{})
+	if err != nil {
+		return errors.New("Errore nel parsing dello schema: " + err.Error())
+	}
+	for _, field := range s.Fields {
+		if field.DBName == "" || field.DBName == "weather" || field.DBName == "dt" {
+			continue
+		}
+		measures = append(measures, field.DBName)
+	}
+
 	return
 }

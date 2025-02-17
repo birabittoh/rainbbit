@@ -4,15 +4,12 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/briandowns/openweathermap"
-	"github.com/glebarez/sqlite"
 	"github.com/joho/godotenv"
 	"github.com/robfig/cron/v3"
-	"gorm.io/gorm"
 )
 
 // Impostazioni per unità e lingua
@@ -21,8 +18,6 @@ const (
 	lang = "it"
 	port = "3000"
 )
-
-var db *gorm.DB
 
 // ------------------------
 // FUNZIONE MAIN
@@ -52,22 +47,9 @@ func Main() {
 		Longitude: longitude,
 	}
 
-	// Assicuriamoci che la directory "data" esista
-	dataDir := "data"
-	if err := os.MkdirAll(dataDir, os.ModePerm); err != nil {
-		log.Fatalln("Errore nella creazione della directory 'data':", err)
-	}
-
-	// Inizializzazione del database SQLite con GORM
-	dbPath := filepath.Join(dataDir, "data.sqlite?_pragma=foreign_keys(1)")
-	db, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	err = initDB()
 	if err != nil {
-		log.Fatalln("Errore nell'apertura del database:", err)
-	}
-
-	// Migrazione dello schema per il modello Record
-	if err := db.AutoMigrate(&Record{}); err != nil {
-		log.Fatalln("Errore nella migrazione del database:", err)
+		log.Fatalln("Errore nell'inizializzazione del database:", err)
 	}
 
 	// Creazione e configurazione del cron scheduler.
