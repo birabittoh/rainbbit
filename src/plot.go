@@ -1,6 +1,7 @@
 package src
 
 import (
+	"bytes"
 	"errors"
 	"slices"
 	"strings"
@@ -9,13 +10,16 @@ import (
 
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/vg"
 	"gonum.org/v1/plot/vg/draw"
 	"gorm.io/gorm"
 )
 
-type PlotData struct {
-	Timestamps []int64
-	Values     []float64
+func setAxisColor(axis *plot.Axis, color color.Color) {
+	axis.Color = color
+	axis.Label.TextStyle.Color = color
+	axis.Tick.Color = color
+	axis.Tick.Label.Color = color
 }
 
 func plotMeasure(measure string, from int64, to int64) (p *plot.Plot, err error) {
@@ -50,6 +54,12 @@ func plotMeasure(measure string, from int64, to int64) (p *plot.Plot, err error)
 
 	// Plot the data
 	p = plot.New()
+
+	p.BackgroundColor = color.RGBA{R: 0, G: 0, B: 0, A: 0}
+	setAxisColor(&p.X, color.White)
+	setAxisColor(&p.Y, color.White)
+
+	p.Title.TextStyle.Color = color.White
 	p.Title.Text = strings.ReplaceAll(capitalize(measure), "_", " ")
 
 	// Add the data to the plot (dt = x, measure = y)
@@ -74,5 +84,25 @@ func plotMeasure(measure string, from int64, to int64) (p *plot.Plot, err error)
 	p.Add(s)
 
 	return
+}
 
+func getPlotSVG(measure string, from int64, to int64) (buf bytes.Buffer, err error) {
+	p, err := plotMeasure(measure, from, to)
+	if err != nil {
+		err = errors.New("errore nella creazione del plot: " + err.Error())
+		return
+	}
+
+	writer, err := p.WriterTo(4*vg.Inch, 4*vg.Inch, "svg")
+	if err != nil {
+		err = errors.New("errore nella creazione del writer SVG: " + err.Error())
+		return
+	}
+
+	_, err = writer.WriteTo(&buf)
+	if err != nil {
+		err = errors.New("errore nella scrittura del plot SVG: " + err.Error())
+		return
+	}
+	return
 }

@@ -1,26 +1,32 @@
 package src
 
 import (
-	"bytes"
 	"encoding/json"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
-
-	"gonum.org/v1/plot/vg"
 )
 
 const (
 	base = "base"
+	ps   = string(os.PathSeparator)
 
-	basePath    = "templates" + string(os.PathSeparator) + base + ".html"
-	indexPath   = "templates" + string(os.PathSeparator) + "index.html"
-	recordsPath = "templates" + string(os.PathSeparator) + "records.html"
+	basePath    = "templates" + ps + base + ".html"
+	indexPath   = "templates" + ps + "index.html"
+	recordsPath = "templates" + ps + "records.html"
+	plotPath    = "templates" + ps + "plot.html"
 )
 
 var tmpl map[string]*template.Template
+
+type PlotData struct {
+	From     string
+	To       string
+	Measure  string
+	Measures []string
+}
 
 func respond(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
@@ -69,23 +75,9 @@ func getAPIPlot(w http.ResponseWriter, r *http.Request) {
 		to = 0
 	}
 
-	p, err := plotMeasure(measure, from, to)
+	buf, err := getPlotSVG(measure, from, to)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Save the plot to an SVG file
-	writer, err := p.WriterTo(4*vg.Inch, 4*vg.Inch, "svg")
-	if err != nil {
-		http.Error(w, "Errore nella creazione del writer SVG", http.StatusInternalServerError)
-		return
-	}
-
-	var buf bytes.Buffer
-	_, err = writer.WriteTo(&buf)
-	if err != nil {
-		http.Error(w, "Errore nella scrittura del plot SVG", http.StatusInternalServerError)
 		return
 	}
 
@@ -114,12 +106,25 @@ func getRecords(w http.ResponseWriter, r *http.Request) {
 	tmpl[recordsPath].ExecuteTemplate(w, base, records)
 }
 
+func getPlot(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	pd := PlotData{
+		From:     q.Get("from"),
+		To:       q.Get("to"),
+		Measure:  r.PathValue("measure"),
+		Measures: measures,
+	}
+
+	tmpl[plotPath].ExecuteTemplate(w, base, pd)
+}
+
 func getServeMux() *http.ServeMux {
 	// init templates
 	tmpl = make(map[string]*template.Template)
 
 	tmpl[indexPath] = template.Must(template.ParseFiles(indexPath, basePath))
 	tmpl[recordsPath] = template.Must(template.ParseFiles(recordsPath, basePath))
+	tmpl[plotPath] = template.Must(template.ParseFiles(plotPath, basePath))
 
 	// init conditions
 	var err error
@@ -138,6 +143,7 @@ func getServeMux() *http.ServeMux {
 
 	s.HandleFunc("GET /", getIndex)
 	s.HandleFunc("GET /records", getRecords)
+	s.HandleFunc("GET /plot/{measure}", getPlot)
 
 	return s
 }
