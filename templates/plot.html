@@ -2,7 +2,7 @@
 {{ define "body" }}<div class="container">
     <div class="weather">
         <div class="conditions">
-            <img src="/api/plot/{{ .Measure }}?from={{ .From }}&to={{ .To }}" alt="Could not display plot."><br />
+            <img src="/api/plot/{{ .Measure }}?from={{ .From }}&to={{ .To }}" alt="Could not display plot." style="max-width: 100%;"><br />
             <p>
                 <a href="/plot/{{ .Measure }}">All</a>,
                 <a href="/plot/{{ .Measure }}?from={{ .OneDayAgo }}">24h</a>

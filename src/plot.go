@@ -3,6 +3,8 @@ package src
 import (
 	"bytes"
 	"errors"
+	"math"
+	"time"
 
 	"image/color"
 
@@ -10,6 +12,8 @@ import (
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
 )
+
+const tickFormat = "15:04 02/01"
 
 var (
 	lightGray  = color.RGBA{R: 224, G: 224, B: 224, A: 255}
@@ -26,6 +30,65 @@ type DataPoint struct {
 	Value4 float64
 }
 
+// customTimeTicks implementa plot.Ticker
+type customTimeTicks struct {
+	times []time.Time
+}
+
+func (ct customTimeTicks) Ticks(min, max float64) []plot.Tick {
+	// Prima raccogliamo tutti i timestamp validi (quelli compresi in [min, max])
+	var validTimes []time.Time
+	for _, t := range ct.times {
+		unix := float64(t.Unix())
+		if unix < min || unix > max {
+			continue
+		}
+		validTimes = append(validTimes, t)
+	}
+
+	// Impostiamo il numero massimo di tick che vogliamo mostrare.
+	const maxTicks = 10
+	var ticks []plot.Tick
+
+	// Se il numero di timestamp validi è minore o uguale a maxTicks, li stampiamo tutti.
+	if len(validTimes) <= maxTicks {
+		for _, t := range validTimes {
+			ticks = append(ticks, plot.Tick{
+				Value: float64(t.Unix()),
+				Label: t.Format(tickFormat),
+			})
+		}
+		return ticks
+	}
+
+	// Se ci sono più timestamp, calcoliamo un intervallo per "saltare" alcuni tick.
+	step := len(validTimes) / maxTicks
+	if step < 1 {
+		step = 1
+	}
+
+	// Selezioniamo ogni 'step'-esimo timestamp.
+	for i, t := range validTimes {
+		if i%step == 0 {
+			ticks = append(ticks, plot.Tick{
+				Value: float64(t.Unix()),
+				Label: t.Format(tickFormat),
+			})
+		}
+	}
+
+	// Assicuriamoci di includere anche l'ultimo timestamp, se non è già stato aggiunto.
+	last := validTimes[len(validTimes)-1]
+	if len(ticks) == 0 || ticks[len(ticks)-1].Value != float64(last.Unix()) {
+		ticks = append(ticks, plot.Tick{
+			Value: float64(last.Unix()),
+			Label: last.Format(tickFormat),
+		})
+	}
+
+	return ticks
+}
+
 func setAxisColor(axis *plot.Axis, color color.Color) {
 	axis.Color = color
 	axis.Label.TextStyle.Color = color
@@ -33,14 +96,18 @@ func setAxisColor(axis *plot.Axis, color color.Color) {
 	axis.Tick.Label.Color = color
 }
 
-func newDarkPlot() *plot.Plot {
+func newDarkPlot(timestamps []time.Time) *plot.Plot {
 	p := plot.New()
 	p.BackgroundColor = color.Transparent
 	setAxisColor(&p.X, color.White)
 	setAxisColor(&p.Y, color.White)
-	p.X.Tick.Marker = plot.TimeTicks{Format: "2006-01-02\n15:04:05"}
+	p.X.Tick.Marker = customTimeTicks{times: timestamps}
+	p.X.Tick.Label.Rotation = math.Pi / -2
+	p.X.Tick.Label.XAlign = 0.05
+	p.X.Tick.Label.YAlign = 0
 	p.Title.TextStyle.Color = color.White
 	p.Legend.TextStyle.Color = color.White
+
 	return p
 }
 
@@ -66,14 +133,17 @@ func plotMeasure(measure string, from int64, to int64) (p *plot.Plot, err error)
 		return
 	}
 
-	// Plot the data
-	p = newDarkPlot()
-
+	var timestamps []time.Time
 	pts := make(plotter.XYs, len(dp))
 	for i := range dp {
 		pts[i].X = dp[i].Dt
 		pts[i].Y = dp[i].Value0
+
+		timestamps = append(timestamps, time.Unix(int64(dp[i].Dt), 0).Round(time.Minute))
 	}
+
+	// Plot the data
+	p = newDarkPlot(timestamps)
 
 	addLines(p, pts, lightGray, false, capitalize(measure))
 
@@ -110,7 +180,7 @@ func plotTemperature(from int64, to int64) (p *plot.Plot, err error) {
 	}
 
 	// Plot the data
-	p = newDarkPlot()
+	var timestamps []time.Time
 
 	tPts := make(plotter.XYs, len(dp))
 	tMinPts := make(plotter.XYs, len(dp))
@@ -126,7 +196,11 @@ func plotTemperature(from int64, to int64) (p *plot.Plot, err error) {
 		tMinPts[i].Y = dp[i].Value1
 		tMaxPts[i].Y = dp[i].Value2
 		flPts[i].Y = dp[i].Value3
+
+		timestamps = append(timestamps, time.Unix(int64(dp[i].Dt), 0).Round(time.Minute))
 	}
+
+	p = newDarkPlot(timestamps)
 
 	// Add the plot points to the plot
 	err = addLines(p, flPts, lightGray, true, "Feels Like")
