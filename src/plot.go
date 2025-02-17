@@ -9,7 +9,12 @@ import (
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
-	"gonum.org/v1/plot/vg/draw"
+)
+
+var (
+	lightGray  = color.RGBA{R: 224, G: 224, B: 224, A: 255}
+	dodgerBlue = color.RGBA{R: 30, G: 144, B: 255, A: 255}
+	redOrange  = color.RGBA{R: 255, G: 69, B: 0, A: 255}
 )
 
 type DataPoint struct {
@@ -28,8 +33,19 @@ func setAxisColor(axis *plot.Axis, color color.Color) {
 	axis.Tick.Label.Color = color
 }
 
-func getPlotSVG(p *plot.Plot) (buf bytes.Buffer, err error) {
-	writer, err := p.WriterTo(4*vg.Inch, 4*vg.Inch, "svg")
+func newDarkPlot() *plot.Plot {
+	p := plot.New()
+	p.BackgroundColor = color.Transparent
+	setAxisColor(&p.X, color.White)
+	setAxisColor(&p.Y, color.White)
+	p.X.Tick.Marker = plot.TimeTicks{Format: "2006-01-02\n15:04:05"}
+	p.Title.TextStyle.Color = color.White
+	p.Legend.TextStyle.Color = color.White
+	return p
+}
+
+func getPlotSVG(p *plot.Plot, w vg.Length, h vg.Length) (buf bytes.Buffer, err error) {
+	writer, err := p.WriterTo(w, h, "svg")
 	if err != nil {
 		err = errors.New("errore nella creazione del writer SVG: " + err.Error())
 		return
@@ -51,16 +67,7 @@ func plotMeasure(measure string, from int64, to int64) (p *plot.Plot, err error)
 	}
 
 	// Plot the data
-	p = plot.New()
-
-	p.BackgroundColor = color.Transparent
-	setAxisColor(&p.X, color.White)
-	setAxisColor(&p.Y, color.White)
-
-	p.X.Tick.Marker = plot.TimeTicks{Format: "2006-01-02\n15:04:05"}
-
-	p.Title.TextStyle.Color = color.White
-	p.Title.Text = measure
+	p = newDarkPlot()
 
 	pts := make(plotter.XYs, len(dp))
 	for i := range dp {
@@ -68,25 +75,13 @@ func plotMeasure(measure string, from int64, to int64) (p *plot.Plot, err error)
 		pts[i].Y = dp[i].Value0
 	}
 
-	// Add the points to the plot
-	l, s, err := plotter.NewLinePoints(pts)
-	if err != nil {
-		err = errors.New("Errore nella creazione del plot: " + err.Error())
-		return
-	}
-
-	l.Color = color.Gray{Y: 128}
-	s.Color = color.Gray{Y: 128}
-	s.GlyphStyle.Shape = draw.CircleGlyph{}
-
-	p.Add(l)
-	p.Add(s)
+	addLines(p, pts, lightGray, false, capitalize(measure))
 
 	return
 }
 
 func addLines(p *plot.Plot, points plotter.XYs, color color.Color, dashed bool, label string) error {
-	l, s, err := plotter.NewLinePoints(points)
+	l, err := plotter.NewLine(points)
 	if err != nil {
 		return errors.New("Errore nella creazione del plot: " + err.Error())
 	}
@@ -95,11 +90,13 @@ func addLines(p *plot.Plot, points plotter.XYs, color color.Color, dashed bool, 
 		l.Dashes = []vg.Length{vg.Points(5), vg.Points(5)}
 	}
 	l.Color = color
-	s.Color = color
-	s.GlyphStyle.Shape = draw.CircleGlyph{}
-
 	p.Add(l)
-	p.Add(s)
+
+	/*
+		s.Color = color
+		s.GlyphStyle.Shape = draw.CircleGlyph{}
+		p.Add(s)
+	*/
 
 	p.Legend.Add(label, l)
 	return nil
@@ -113,17 +110,7 @@ func plotTemperature(from int64, to int64) (p *plot.Plot, err error) {
 	}
 
 	// Plot the data
-	p = plot.New()
-
-	p.BackgroundColor = color.Transparent
-	setAxisColor(&p.X, color.White)
-	setAxisColor(&p.Y, color.White)
-
-	p.X.Tick.Marker = plot.TimeTicks{Format: "2006-01-02\n15:04:05"}
-
-	p.Title.Text = "Temperature"
-	p.Title.TextStyle.Color = color.White
-	p.Legend.TextStyle.Color = color.White
+	p = newDarkPlot()
 
 	tPts := make(plotter.XYs, len(dp))
 	tMinPts := make(plotter.XYs, len(dp))
@@ -141,25 +128,20 @@ func plotTemperature(from int64, to int64) (p *plot.Plot, err error) {
 		flPts[i].Y = dp[i].Value3
 	}
 
-	tColor := color.Gray{Y: 128}
-	tMinColor := color.RGBA{R: 0, G: 0, B: 255, A: 255}
-	tMaxColor := color.RGBA{R: 255, G: 0, B: 0, A: 255}
-	flColor := color.Gray{Y: 50}
-
 	// Add the plot points to the plot
-	err = addLines(p, tPts, tColor, false, "Temp")
+	err = addLines(p, flPts, lightGray, true, "Feels Like")
 	if err != nil {
 		return
 	}
-	err = addLines(p, tMinPts, tMinColor, false, "Min")
+	err = addLines(p, tPts, lightGray, false, "Temp")
 	if err != nil {
 		return
 	}
-	err = addLines(p, tMaxPts, tMaxColor, false, "Max")
+	err = addLines(p, tMinPts, dodgerBlue, false, "Min")
 	if err != nil {
 		return
 	}
-	err = addLines(p, flPts, flColor, true, "Feels Like")
+	err = addLines(p, tMaxPts, redOrange, false, "Max")
 	if err != nil {
 		return
 	}

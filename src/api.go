@@ -8,6 +8,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"gonum.org/v1/plot/vg"
 )
 
 const (
@@ -18,7 +20,10 @@ const (
 	indexPath   = "templates" + ps + "index.html"
 	recordsPath = "templates" + ps + "records.html"
 	plotPath    = "templates" + ps + "plot.html"
-	tempPath    = "templates" + ps + "temp.html"
+	dashPath    = "templates" + ps + "dash.html"
+
+	plotWidth  = 7 * vg.Inch
+	plotHeight = 4 * vg.Inch
 )
 
 var tmpl map[string]*template.Template
@@ -84,7 +89,7 @@ func getAPIPlot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	buf, err := getPlotSVG(p)
+	buf, err := getPlotSVG(p, plotWidth, plotHeight)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -112,7 +117,7 @@ func getAPITemp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	buf, err := getPlotSVG(p)
+	buf, err := getPlotSVG(p, plotWidth, plotHeight)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -158,7 +163,7 @@ func getPlot(w http.ResponseWriter, r *http.Request) {
 	tmpl[plotPath].ExecuteTemplate(w, base, pd)
 }
 
-func getTemp(w http.ResponseWriter, r *http.Request) {
+func getDash(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	now := time.Now()
 
@@ -168,7 +173,7 @@ func getTemp(w http.ResponseWriter, r *http.Request) {
 		To:        q.Get("to"),
 	}
 
-	tmpl[tempPath].ExecuteTemplate(w, base, pd)
+	tmpl[dashPath].ExecuteTemplate(w, base, pd)
 }
 
 func getServeMux() *http.ServeMux {
@@ -178,7 +183,7 @@ func getServeMux() *http.ServeMux {
 	tmpl[indexPath] = template.Must(template.ParseFiles(indexPath, basePath))
 	tmpl[recordsPath] = template.Must(template.ParseFiles(recordsPath, basePath))
 	tmpl[plotPath] = template.Must(template.ParseFiles(plotPath, basePath))
-	tmpl[tempPath] = template.Must(template.ParseFiles(tempPath, basePath))
+	tmpl[dashPath] = template.Must(template.ParseFiles(dashPath, basePath))
 
 	// init conditions
 	var err error
@@ -199,7 +204,7 @@ func getServeMux() *http.ServeMux {
 	s.HandleFunc("GET /", getIndex)
 	s.HandleFunc("GET /records", getRecords)
 	s.HandleFunc("GET /plot/{measure}", getPlot)
-	s.HandleFunc("GET /temp", getTemp)
+	s.HandleFunc("GET /dash", getDash)
 
 	return s
 }
