@@ -34,6 +34,7 @@ type PlotData struct {
 	To         string
 	Measure    string
 	Measures   []string
+	Records    []Record
 	Latest     Record
 }
 
@@ -163,7 +164,12 @@ func getRecords(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	executeTemplateSafe(w, recordsPath, records)
+	pd := PlotData{
+		OneWeekAgo: time.Now().Add(-24 * 7 * time.Hour).Unix(),
+		Records:    records,
+	}
+
+	executeTemplateSafe(w, recordsPath, pd)
 }
 
 func getPlot(w http.ResponseWriter, r *http.Request) {
