@@ -15,6 +15,10 @@
           border-radius: 10px;
           box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
           min-width: 220px;
+          flex-grow: 0;
+          flex-basis: auto;
+          flex-shrink: 1;
+          max-width: 45%;
       }
       .weather p {
           margin: 10px 0;
@@ -29,13 +33,7 @@
           gap: 20px;
           flex-wrap: wrap;
       }
-      .weather {
-        flex-grow: 0;
-        flex-basis: auto;
-        flex-shrink: 1;
-        max-width: 45%;
-      }
-      .conditions {
+      .text-center {
         text-align: center;
       }
       table {
@@ -67,17 +65,15 @@
       a:visited {
         color: #1e90ff;
       }
-      .plots {
-        overflow-x: auto;
-      }
       .plot {
-        display: inline-block;
-        margin-bottom: 20px;
+        max-width: unset;
+        overflow-x: auto;
       }
       @media (max-width: 768px) {
           .weather {
             max-width: 100%;
             width: 100%;
+            text-align: center;
           }
       }
     </style>
