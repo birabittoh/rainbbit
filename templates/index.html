@@ -2,11 +2,13 @@
 <link rel="icon" href="//openweathermap.org/img/wn/{{ .Latest.Favicon }}.png">{{ end }}
 {{ define "body" }}
 <div class="container">
-    <div class="weather card">{{ range .Latest.Conditions }}
-        <div class="conditions">
-            <p><strong>{{ .Description }}</strong></p>
-            <img src="//openweathermap.org/img/wn/{{ .Icon }}@4x.png" alt="{{ .Name }}" title="{{ .Name }}">
-        </div>{{ end }}
+    <div class="weather card">
+        <div class="container" style="gap: 0px;">{{ range .Latest.Conditions }}
+            <div class="conditions">
+                <p><strong>{{ .Description }}</strong></p>
+                <img src="//openweathermap.org/img/wn/{{ .Icon }}@4x.png" alt="{{ .Name }}" title="{{ .Name }}">
+            </div>{{ end }}
+        </div>
     <p style="text-align: center;"><em>Last updated {{ .Latest.TimeAgo }} ago</em></p>
     </div>
     <div class="weather card">
