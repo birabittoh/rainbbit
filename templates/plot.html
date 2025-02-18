@@ -4,13 +4,13 @@
         <div class="conditions">
             <img src="/api/plot/{{ .Measure }}?from={{ .From }}&to={{ .To }}" alt="Could not display plot." style="max-width: 100%;"><br />
             <p>
-                <a href="/plot/{{ .Measure }}?from=0">All</a>,
-                <a href="/plot/{{ .Measure }}?from={{ .OneWeekAgo }}">1w</a>,
-                <a href="/plot/{{ .Measure }}">1d</a>
+                <a href="?from=0">All</a>,
+                <a href="?from={{ .OneWeekAgo }}">1w</a>,
+                <a href="?">1d</a>
             </p>
         </div>
     </div>
     <div class="weather">{{ range .Measures }}
-        <p><a href="/plot/{{ . }}">{{ . }}</a></p>{{ end }}
+        <p><a href="/plot/{{ . }}?from={{ $.From }}&to={{ $.To }}">{{ . }}</a></p>{{ end }}
     </div>
 </div>{{ end }}

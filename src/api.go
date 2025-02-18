@@ -1,6 +1,7 @@
 package src
 
 import (
+	"bytes"
 	"encoding/json"
 	"html/template"
 	"log"
@@ -20,7 +21,6 @@ const (
 	indexPath   = "templates" + ps + "index.html"
 	recordsPath = "templates" + ps + "records.html"
 	plotPath    = "templates" + ps + "plot.html"
-	dashPath    = "templates" + ps + "dash.html"
 
 	plotWidth  = 7 * vg.Inch
 	plotHeight = 4 * vg.Inch
@@ -34,6 +34,7 @@ type PlotData struct {
 	To         string
 	Measure    string
 	Measures   []string
+	Latest     Record
 }
 
 func respond(w http.ResponseWriter, data interface{}) {
@@ -55,6 +56,15 @@ func getLimits(r *http.Request) (from int64, to int64) {
 	}
 
 	return
+}
+
+func executeTemplateSafe(w http.ResponseWriter, t string, data any) {
+	var buf bytes.Buffer
+	if err := tmpl[t].ExecuteTemplate(&buf, base, data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	buf.WriteTo(w)
 }
 
 func getAPIRecords(w http.ResponseWriter, r *http.Request) {
@@ -128,13 +138,21 @@ func getAPITemp(w http.ResponseWriter, r *http.Request) {
 }
 
 func getIndex(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
 	latest, err := getLatestRecord()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	tmpl[indexPath].ExecuteTemplate(w, base, latest)
+	pd := PlotData{
+		OneWeekAgo: time.Now().Add(-24 * 7 * time.Hour).Unix(),
+		From:       q.Get("from"),
+		To:         q.Get("to"),
+		Latest:     latest,
+	}
+
+	executeTemplateSafe(w, indexPath, pd)
 }
 
 func getRecords(w http.ResponseWriter, r *http.Request) {
@@ -145,7 +163,7 @@ func getRecords(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl[recordsPath].ExecuteTemplate(w, base, records)
+	executeTemplateSafe(w, recordsPath, records)
 }
 
 func getPlot(w http.ResponseWriter, r *http.Request) {
@@ -160,20 +178,7 @@ func getPlot(w http.ResponseWriter, r *http.Request) {
 		Measures:   measures,
 	}
 
-	tmpl[plotPath].ExecuteTemplate(w, base, pd)
-}
-
-func getDash(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	now := time.Now()
-
-	pd := PlotData{
-		OneWeekAgo: now.Add(-24 * 7 * time.Hour).Unix(),
-		From:       q.Get("from"),
-		To:         q.Get("to"),
-	}
-
-	tmpl[dashPath].ExecuteTemplate(w, base, pd)
+	executeTemplateSafe(w, plotPath, pd)
 }
 
 func getServeMux() *http.ServeMux {
@@ -183,7 +188,6 @@ func getServeMux() *http.ServeMux {
 	tmpl[indexPath] = template.Must(template.ParseFiles(indexPath, basePath))
 	tmpl[recordsPath] = template.Must(template.ParseFiles(recordsPath, basePath))
 	tmpl[plotPath] = template.Must(template.ParseFiles(plotPath, basePath))
-	tmpl[dashPath] = template.Must(template.ParseFiles(dashPath, basePath))
 
 	// init conditions
 	var err error
@@ -204,8 +208,7 @@ func getServeMux() *http.ServeMux {
 	s.HandleFunc("GET /", getIndex)
 	s.HandleFunc("GET /records", getRecords)
 	s.HandleFunc("GET /plot/{measure}", getPlot)
-	s.HandleFunc("GET /plot", getPlot)
-	s.HandleFunc("GET /dash", getDash)
+	s.HandleFunc("GET /plot/", getPlot)
 
 	return s
 }
