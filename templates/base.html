@@ -9,11 +9,12 @@
           background-color: #121212;
           color: #e0e0e0;
       }
-      .weather {
+      .card {
           background-color: #1e1e1e;
           padding: 20px;
           border-radius: 10px;
           box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+          min-width: 220px;
       }
       .weather p {
           margin: 10px 0;
@@ -68,6 +69,10 @@
       }
       .plots {
         overflow-x: auto;
+      }
+      .plot {
+        display: inline-block;
+        margin-bottom: 20px;
       }
       @media (max-width: 768px) {
           .weather {

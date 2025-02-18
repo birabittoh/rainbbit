@@ -2,14 +2,14 @@
 <link rel="icon" href="//openweathermap.org/img/wn/{{ .Latest.Favicon }}.png">{{ end }}
 {{ define "body" }}
 <div class="container">
-    <div class="weather">{{ range .Latest.Conditions }}
+    <div class="weather card">{{ range .Latest.Conditions }}
         <div class="conditions">
             <p><strong>{{ .Description }}</strong></p>
             <img src="//openweathermap.org/img/wn/{{ .Icon }}@4x.png" alt="{{ .Name }}" title="{{ .Name }}">
         </div>{{ end }}
     <p style="text-align: center;"><em>Last updated {{ .Latest.TimeAgo }} ago</em></p>
     </div>
-    <div class="weather">
+    <div class="weather card">
         <p><strong>Humidity:</strong> {{ .Latest.Humidity }}%</p>
         <p><strong>Temperature:</strong> {{ .Latest.Temp }}°C</p>
         <p><strong>Min:</strong> {{ .Latest.TempMin }}°C</p>
@@ -29,11 +29,11 @@
         <a href="?">1d</a>
     </p>
     <div class="plots">
-        <div class="plot">
+        <div class="plot card" style="margin-right: 20px">
             <p>Temperature</p>
             <img src="/api/temp?from={{ .From }}&to={{ .To }}" alt="Could not display temp plot.">
         </div>
-        <div class="plot">
+        <div class="plot card">
             <p>Humidity</p>
             <img src="/api/plot/humidity?from={{ .From }}&to={{ .To }}" alt="Could not display humidity plot.">
         </div>
