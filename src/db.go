@@ -63,8 +63,20 @@ type Record struct {
 	TimeAgo    string      `json:"-" gorm:"-"`
 }
 
-func getAllRecords() (records []Record, err error) {
-	err = db.Find(&records).Error
+func addConstraints(query *gorm.DB, from int64, to int64) *gorm.DB {
+	if from != 0 {
+		query = query.Where("dt >= ?", from)
+	}
+	if to != 0 {
+		query = query.Where("dt <= ?", to)
+	}
+	return query
+}
+
+func getAllRecords(from int64, to int64) (records []Record, err error) {
+	query := addConstraints(db.Model(&Record{}), from, to)
+
+	err = query.Find(&records).Error
 	if err != nil {
 		return
 	}
@@ -104,14 +116,7 @@ func getDataPoints(measures []string, from int64, to int64) (dp []DataPoint, err
 	for i, measure := range measures {
 		selectText += ", " + measure + " as value" + strconv.Itoa(i)
 	}
-	query = query.Select(selectText)
-
-	if from != 0 {
-		query = query.Where("dt >= ?", from)
-	}
-	if to != 0 {
-		query = query.Where("dt <= ?", to)
-	}
+	query = addConstraints(query.Select(selectText), from, to)
 
 	err = query.Scan(&dp).Error
 	if err != nil {

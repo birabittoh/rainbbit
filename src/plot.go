@@ -15,11 +15,16 @@ import (
 
 const tickFormat = "15:04 02/01"
 
-var (
-	lightGray  = color.RGBA{R: 224, G: 224, B: 224, A: 255}
-	dodgerBlue = color.RGBA{R: 30, G: 144, B: 255, A: 255}
-	redOrange  = color.RGBA{R: 255, G: 69, B: 0, A: 255}
-)
+var dc = map[string]color.Color{
+	"lightGray":    color.RGBA{R: 224, G: 224, B: 224, A: 255},
+	"dodgerBlue":   color.RGBA{R: 30, G: 144, B: 255, A: 255},
+	"redOrange":    color.RGBA{R: 255, G: 69, B: 0, A: 255},
+	"limeGreen":    color.RGBA{R: 50, G: 205, B: 50, A: 255},
+	"gold":         color.RGBA{R: 255, G: 215, B: 0, A: 255},
+	"orchid":       color.RGBA{R: 218, G: 112, B: 214, A: 255},
+	"mediumPurple": color.RGBA{R: 147, G: 112, B: 219, A: 255},
+	"cyan":         color.RGBA{R: 0, G: 255, B: 255, A: 255},
+}
 
 type DataPoint struct {
 	Dt     float64
@@ -144,7 +149,7 @@ func plotMeasure(measure string, from int64, to int64) (p *plot.Plot, err error)
 	// Plot the data
 	p = newDarkPlot(timestamps)
 
-	addLines(p, pts, lightGray, false, capitalize(measure))
+	addLines(p, pts, dc["lightGray"], false, capitalize(measure))
 
 	return
 }
@@ -160,12 +165,6 @@ func addLines(p *plot.Plot, points plotter.XYs, color color.Color, dashed bool, 
 	}
 	l.Color = color
 	p.Add(l)
-
-	/*
-		s.Color = color
-		s.GlyphStyle.Shape = draw.CircleGlyph{}
-		p.Add(s)
-	*/
 
 	p.Legend.Add(label, l)
 	return nil
@@ -202,19 +201,19 @@ func plotTemperature(from int64, to int64) (p *plot.Plot, err error) {
 	p = newDarkPlot(timestamps)
 
 	// Add the plot points to the plot
-	err = addLines(p, flPts, lightGray, true, "Feels Like")
+	err = addLines(p, flPts, dc["gold"], true, "Feels Like")
 	if err != nil {
 		return
 	}
-	err = addLines(p, tPts, lightGray, false, "Temp")
+	err = addLines(p, tPts, dc["lightGray"], false, "Temp")
 	if err != nil {
 		return
 	}
-	err = addLines(p, tMinPts, dodgerBlue, false, "Min")
+	err = addLines(p, tMinPts, dc["dodgerBlue"], false, "Min")
 	if err != nil {
 		return
 	}
-	err = addLines(p, tMaxPts, redOrange, false, "Max")
+	err = addLines(p, tMaxPts, dc["redOrange"], false, "Max")
 	if err != nil {
 		return
 	}

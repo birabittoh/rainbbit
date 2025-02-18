@@ -4,8 +4,9 @@
         <div class="conditions">
             <img src="/api/plot/{{ .Measure }}?from={{ .From }}&to={{ .To }}" alt="Could not display plot." style="max-width: 100%;"><br />
             <p>
-                <a href="/plot/{{ .Measure }}">All</a>,
-                <a href="/plot/{{ .Measure }}?from={{ .OneDayAgo }}">24h</a>
+                <a href="/plot/{{ .Measure }}?from=0">All</a>,
+                <a href="/plot/{{ .Measure }}?from={{ .OneWeekAgo }}">1w</a>,
+                <a href="/plot/{{ .Measure }}">1d</a>
             </p>
         </div>
     </div>
