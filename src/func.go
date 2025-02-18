@@ -4,7 +4,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/briandowns/openweathermap"
 	"gorm.io/gorm"
@@ -67,7 +66,7 @@ func fetchAndSaveWeather(db *gorm.DB, coords *openweathermap.Coordinates, apiKey
 		log.Println("Errore nel salvataggio del record:", err)
 		return
 	}
-	log.Printf("Record salvato alle %s\n", time.Now().Format(time.RFC3339))
+	log.Println("Record salvato")
 }
 
 func capitalize(s string) string {

@@ -14,9 +14,9 @@ import (
 
 // Impostazioni per unità e lingua
 const (
-	unit = "C"
-	lang = "it"
-	port = "3000"
+	unit    = "C"
+	lang    = "it"
+	address = ":3000"
 )
 
 // ------------------------
@@ -57,7 +57,7 @@ func Main() {
 	c := cron.New(cron.WithSeconds())
 	spec := "0 0/30 * * * *"
 	_, err = c.AddFunc(spec, func() {
-		log.Println("Esecuzione fetchAndSaveWeather:", time.Now().Format(time.RFC3339))
+		log.Println("Eseguo fetchAndSaveWeather")
 		fetchAndSaveWeather(db, coords, apiKey, unit, lang)
 	})
 	if err != nil {
@@ -66,11 +66,29 @@ func Main() {
 
 	// Avvio del cron scheduler
 	c.Start()
-	log.Println("Scheduler avviato, in attesa di esecuzioni...")
+	log.Println("Cron scheduler avviato")
 
-	// fetchAndSaveWeather(db, coords, apiKey, unit, lang)
+	// Aggiungo un primo record nel database, se necessario
+	var count int64
+	err = db.Model(&Record{}).Count(&count).Error
+	if err != nil {
+		log.Fatal("Errore durante il controllo dei record nel database:", err)
+	}
+	if count == 0 {
+		log.Println("Nessun record trovato nel database, eseguo fetchAndSaveWeather")
+		fetchAndSaveWeather(db, coords, apiKey, unit, lang)
+	}
 
 	// Avvio del server HTTP
-	mux := getServeMux()
-	log.Fatal(http.ListenAndServe(":"+port, mux))
+	s := &http.Server{
+		Addr:              address,
+		Handler:           rateLimiterMiddleware(getServeMux()),
+		ReadTimeout:       5 * time.Second,  // Timeout per leggere la richiesta
+		WriteTimeout:      10 * time.Second, // Timeout per scrivere la risposta
+		IdleTimeout:       60 * time.Second, // Timeout per connessioni Keep-Alive
+		ReadHeaderTimeout: 2 * time.Second,  // Previene attacchi Slowloris
+	}
+
+	log.Println("Server in ascolto all'indirizzo", address)
+	log.Fatal(s.ListenAndServe())
 }

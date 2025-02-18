@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"time"
@@ -24,11 +25,13 @@ const (
 
 	plotWidth  = 7 * vg.Inch
 	plotHeight = 4 * vg.Inch
+
+	week = 24 * 7 * time.Hour
 )
 
 var tmpl map[string]*template.Template
 
-type PlotData struct {
+type PageData struct {
 	OneWeekAgo int64
 	From       string
 	To         string
@@ -44,8 +47,8 @@ func respond(w http.ResponseWriter, data interface{}) {
 	json.NewEncoder(w).Encode(data)
 }
 
-func getLimits(r *http.Request) (from int64, to int64) {
-	q := r.URL.Query()
+func getLimits(r *http.Request) (q url.Values, from int64, to int64) {
+	q = r.URL.Query()
 
 	from, err := strconv.ParseInt(q.Get("from"), 10, 64)
 	if err != nil {
@@ -59,6 +62,14 @@ func getLimits(r *http.Request) (from int64, to int64) {
 	return
 }
 
+func getPageData(q url.Values) *PageData {
+	return &PageData{
+		OneWeekAgo: time.Now().Add(-week).Unix(),
+		From:       q.Get("from"),
+		To:         q.Get("to"),
+	}
+}
+
 func executeTemplateSafe(w http.ResponseWriter, t string, data any) {
 	var buf bytes.Buffer
 	if err := tmpl[t].ExecuteTemplate(&buf, base, data); err != nil {
@@ -69,7 +80,7 @@ func executeTemplateSafe(w http.ResponseWriter, t string, data any) {
 }
 
 func getAPIRecords(w http.ResponseWriter, r *http.Request) {
-	from, to := getLimits(r)
+	_, from, to := getLimits(r)
 	records, err := getAllRecords(from, to)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -94,7 +105,7 @@ func getAPIMeasures(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAPIPlot(w http.ResponseWriter, r *http.Request) {
-	from, to := getLimits(r)
+	_, from, to := getLimits(r)
 	measure := r.PathValue("measure")
 	if measure == "" {
 		http.Error(w, "Misura non specificata", http.StatusBadRequest)
@@ -119,7 +130,7 @@ func getAPIPlot(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAPITemp(w http.ResponseWriter, r *http.Request) {
-	from, to := getLimits(r)
+	_, from, to := getLimits(r)
 
 	p, err := plotTemperature(from, to)
 	if err != nil {
@@ -139,50 +150,36 @@ func getAPITemp(w http.ResponseWriter, r *http.Request) {
 }
 
 func getIndex(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
 	latest, err := getLatestRecord()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	pd := PlotData{
-		OneWeekAgo: time.Now().Add(-24 * 7 * time.Hour).Unix(),
-		From:       q.Get("from"),
-		To:         q.Get("to"),
-		Latest:     latest,
-	}
+	pd := getPageData(r.URL.Query())
+	pd.Latest = latest
 
 	executeTemplateSafe(w, indexPath, pd)
 }
 
 func getRecords(w http.ResponseWriter, r *http.Request) {
-	from, to := getLimits(r)
+	q, from, to := getLimits(r)
 	records, err := getAllRecords(from, to)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	pd := PlotData{
-		OneWeekAgo: time.Now().Add(-24 * 7 * time.Hour).Unix(),
-		Records:    records,
-	}
+	pd := getPageData(q)
+	pd.Records = records
 
 	executeTemplateSafe(w, recordsPath, pd)
 }
 
 func getPlot(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	now := time.Now()
-
-	pd := PlotData{
-		OneWeekAgo: now.Add(-24 * 7 * time.Hour).Unix(),
-		From:       q.Get("from"),
-		To:         q.Get("to"),
-		Measure:    r.PathValue("measure"),
-		Measures:   measures,
-	}
+	pd := getPageData(r.URL.Query())
+	pd.Measures = measures
+	pd.Measure = r.PathValue("measure")
 
 	executeTemplateSafe(w, plotPath, pd)
 }

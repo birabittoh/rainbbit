@@ -7,6 +7,7 @@ require (
 	github.com/glebarez/sqlite v1.11.0
 	github.com/joho/godotenv v1.5.1
 	github.com/robfig/cron/v3 v3.0.1
+	golang.org/x/time v0.10.0
 	gonum.org/v1/plot v0.15.0
 	gorm.io/gorm v1.25.12
 )
