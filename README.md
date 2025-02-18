@@ -21,7 +21,7 @@ First of all, create your own `.env` file:
 cp .env.example .env
 ```
 
-You should set your required latitude and longitude, as well as a free OpenWeather 2.5 [API key](https://home.openweathermap.org/api_keys).
+You should set your latitude and longitude, as well as a free OpenWeather 2.5 [API key](https://home.openweathermap.org/api_keys).
 
 You can then either start the service locally:
 ```sh
@@ -32,6 +32,12 @@ Or use Docker:
 ```sh
 docker compose up -d
 ```
+
+## Optional variables
+ Name        | Default value
+-------------|----------------
+`OWM_CRON`   |`0 0/30 * * * *`
+`APP_ADDRESS`|`:3000`
 
 ## License
 Rainbbit is licensed under MIT.

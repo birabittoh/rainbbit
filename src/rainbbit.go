@@ -24,7 +24,8 @@ const (
 // ------------------------
 func Main() {
 	// Caricamento delle variabili d'ambiente dal file .env
-	if err := godotenv.Load(); err != nil {
+	err := godotenv.Load()
+	if err != nil {
 		log.Println("Nessun file .env trovato, verranno usate le variabili d'ambiente di sistema")
 	}
 
@@ -33,32 +34,35 @@ func Main() {
 	latitudeStr := os.Getenv("OWM_LATITUDE")
 	longitudeStr := os.Getenv("OWM_LONGITUDE")
 
-	latitude, err := strconv.ParseFloat(latitudeStr, 64)
+	coords := &openweathermap.Coordinates{}
+	coords.Latitude, err = strconv.ParseFloat(latitudeStr, 64)
 	if err != nil {
 		log.Fatalln("Errore nel parsing di OWM_LATITUDE:", err)
 	}
-	longitude, err := strconv.ParseFloat(longitudeStr, 64)
+	coords.Longitude, err = strconv.ParseFloat(longitudeStr, 64)
 	if err != nil {
 		log.Fatalln("Errore nel parsing di OWM_LONGITUDE:", err)
 	}
 
-	coords := &openweathermap.Coordinates{
-		Latitude:  latitude,
-		Longitude: longitude,
-	}
-
+	// Connessione al database
 	err = initDB()
 	if err != nil {
 		log.Fatalln("Errore nell'inizializzazione del database:", err)
 	}
 
-	// Creazione e configurazione del cron scheduler.
-	// In questo esempio il job viene eseguito ogni mezz'ora (minuti 0 e 30)
+	// Inizializzazione di OpenWeatherMap
+	current, err = openweathermap.NewCurrent(unit, lang, apiKey)
+	if err != nil {
+		log.Fatal("Errore nella creazione dell'oggetto OpenWeatherMap:", err)
+		return
+	}
+
+	// Creazione e configurazione del cron scheduler
+	spec := getEnvDefault("OWM_CRON", "0 0/30 * * * *")
 	c := cron.New(cron.WithSeconds())
-	spec := "0 0/30 * * * *"
 	_, err = c.AddFunc(spec, func() {
 		log.Println("Eseguo fetchAndSaveWeather")
-		fetchAndSaveWeather(db, coords, apiKey, unit, lang)
+		fetchAndSaveWeather(db, coords)
 	})
 	if err != nil {
 		log.Fatalln("Errore nella creazione del cron job:", err)
@@ -76,9 +80,10 @@ func Main() {
 	}
 	if count == 0 {
 		log.Println("Nessun record trovato nel database, eseguo fetchAndSaveWeather")
-		fetchAndSaveWeather(db, coords, apiKey, unit, lang)
+		fetchAndSaveWeather(db, coords)
 	}
 
+	address := getEnvDefault("APP_ADDRESS", ":3000")
 	// Avvio del server HTTP
 	s := &http.Server{
 		Addr:              address,

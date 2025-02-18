@@ -2,6 +2,7 @@ package src
 
 import (
 	"log"
+	"os"
 	"strconv"
 	"strings"
 
@@ -9,21 +10,16 @@ import (
 	"gorm.io/gorm"
 )
 
+var current *openweathermap.CurrentWeatherData
+
 // ------------------------
 // FUNZIONI DI SUPPORTO
 // ------------------------
 
 // fetchAndSaveWeather effettua la chiamata all'API, mappa i dati nei modelli e li salva nel database.
-func fetchAndSaveWeather(db *gorm.DB, coords *openweathermap.Coordinates, apiKey, unit, lang string) {
-	// Creazione dell'oggetto per il meteo corrente
-	current, err := openweathermap.NewCurrent(unit, lang, apiKey)
-	if err != nil {
-		log.Println("Errore nella creazione dell'oggetto OpenWeatherMap:", err)
-		return
-	}
-
+func fetchAndSaveWeather(db *gorm.DB, coords *openweathermap.Coordinates) {
 	// Chiamata all'API usando le coordinate specificate
-	err = current.CurrentByCoordinates(coords)
+	err := current.CurrentByCoordinates(coords)
 	if err != nil {
 		log.Println("Errore nella chiamata API:", err)
 		return
@@ -45,14 +41,12 @@ func fetchAndSaveWeather(db *gorm.DB, coords *openweathermap.Coordinates, apiKey
 		SeaLevel:  current.Main.SeaLevel,
 		GrndLevel: current.Main.GrndLevel,
 		Humidity:  current.Main.Humidity,
-		// Wind
+		// Other
 		WindSpeed: current.Wind.Speed,
 		WindDeg:   current.Wind.Deg,
-		// Clouds
-		Clouds: current.Clouds.All,
-		// Rain e Snow salvati come stringa JSON (potranno essere vuoti "{}")
-		Rain1H: current.Rain.OneH,
-		Snow1H: current.Snow.OneH,
+		Clouds:    current.Clouds.All,
+		Rain1H:    current.Rain.OneH,
+		Snow1H:    current.Snow.OneH,
 	}
 
 	weatherIDs := []string{}
@@ -74,4 +68,11 @@ func capitalize(s string) string {
 		return s
 	}
 	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+func getEnvDefault(key, def string) string {
+	if val, ok := os.LookupEnv(key); ok {
+		return val
+	}
+	return def
 }
