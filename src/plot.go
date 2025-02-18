@@ -9,22 +9,33 @@ import (
 	"image/color"
 
 	"gonum.org/v1/plot"
+	"gonum.org/v1/plot/font"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
 )
 
-const tickFormat = "15:04 02/01"
+const (
+	tickFormat = "15:04 02/01"
+)
 
-var dc = map[string]color.Color{
-	"lightGray":    color.RGBA{R: 224, G: 224, B: 224, A: 255},
-	"dodgerBlue":   color.RGBA{R: 30, G: 144, B: 255, A: 255},
-	"redOrange":    color.RGBA{R: 255, G: 69, B: 0, A: 255},
-	"limeGreen":    color.RGBA{R: 50, G: 205, B: 50, A: 255},
-	"gold":         color.RGBA{R: 255, G: 215, B: 0, A: 255},
-	"orchid":       color.RGBA{R: 218, G: 112, B: 214, A: 255},
-	"mediumPurple": color.RGBA{R: 147, G: 112, B: 219, A: 255},
-	"cyan":         color.RGBA{R: 0, G: 255, B: 255, A: 255},
-}
+var (
+	dc = map[string]color.Color{
+		"lightGray":    color.RGBA{R: 224, G: 224, B: 224, A: 255},
+		"dodgerBlue":   color.RGBA{R: 30, G: 144, B: 255, A: 255},
+		"redOrange":    color.RGBA{R: 255, G: 69, B: 0, A: 255},
+		"limeGreen":    color.RGBA{R: 50, G: 205, B: 50, A: 255},
+		"gold":         color.RGBA{R: 255, G: 215, B: 0, A: 255},
+		"orchid":       color.RGBA{R: 218, G: 112, B: 214, A: 255},
+		"mediumPurple": color.RGBA{R: 147, G: 112, B: 219, A: 255},
+		"cyan":         color.RGBA{R: 0, G: 255, B: 255, A: 255},
+	}
+
+	plotFont = font.Font{
+		Typeface: "Liberation",
+		Variant:  "Sans",
+		Size:     10,
+	}
+)
 
 type DataPoint struct {
 	Dt     float64
@@ -112,6 +123,9 @@ func newDarkPlot(timestamps []time.Time) *plot.Plot {
 	p.X.Tick.Label.YAlign = 0
 	p.Title.TextStyle.Color = color.White
 	p.Legend.TextStyle.Color = color.White
+	p.Legend.TextStyle.Font = plotFont
+	p.X.Tick.Label.Font = plotFont
+	p.Y.Tick.Label.Font = plotFont
 	return p
 }
 

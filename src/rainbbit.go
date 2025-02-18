@@ -70,7 +70,7 @@ func Main() {
 
 	// fetchAndSaveWeather(db, coords, apiKey, unit, lang)
 
-	// Blocca il main per mantenere il programma in esecuzione
+	// Avvio del server HTTP
 	mux := getServeMux()
 	log.Fatal(http.ListenAndServe(":"+port, mux))
 }
