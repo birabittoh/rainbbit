@@ -3,6 +3,7 @@ services:
     image: ghcr.io/birabittoh/rainbbit:main
     build: .
     container_name: rainbbit
+    restart: unless-stopped
     ports:
       - 3000:3000
     env_file:
