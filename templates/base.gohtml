@@ -6,11 +6,11 @@
     <style>
       body {
           font-family: {{ .FontFamily }};
-          background-color: #121212;
-          color: #e0e0e0;
+          background-color: {{ getHex "darkBG" }};
+          color: {{ getHex "lightGray" }};
       }
       .card {
-          background-color: #1e1e1e;
+          background-color: {{ getHex "darkGray" }};
           padding: 20px;
           border-radius: 10px;
           box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
@@ -39,28 +39,25 @@
           margin: 20px 0;
       }
       table, th, td {
-          border: 1px solid #e0e0e0;
+          border: 1px solid {{ getHex "lightGray" }};
       }
       th, td {
           padding: 10px;
           text-align: left;
       }
       th {
-          background-color: #333333;
-          color: #ffffff;
+          background-color: {{ getHex "darkGray" }};
+          color: {{ getHex "white" }};
       }
       tr:nth-child(even) {
-          background-color: #2e2e2e;
+          background-color: {{ getHex "darkGray" }};
       }
-      a {
-        color: #1e90ff;
+      a, a:visited {
+        color: {{ getHex "dodgerBlue" }};
         text-decoration: none;
       }
       a:hover {
         text-decoration: underline;
-      }
-      a:visited {
-        color: #1e90ff;
       }
       .plot {
         max-width: unset;

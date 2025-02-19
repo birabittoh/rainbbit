@@ -5,11 +5,11 @@
     <div class="card weather">
         <div class="container" style="gap: 0px;">{{ range .Latest.Conditions }}
             <div class="text-center">
-                <p><strong>{{ .Description }}</strong></p>
+                <p><strong>{{ capitalize .Description }}</strong></p>
                 <img src="//openweathermap.org/img/wn/{{ .Icon }}@4x.png" alt="{{ .Name }}" title="{{ .Name }}">
             </div>{{ end }}
         </div>
-    <p class="text-center"><em>Last updated {{ .Latest.TimeAgo }} ago</em></p>
+    <p class="text-center" style="font-size: 10pt;"><em>Last updated {{ .Latest.TimeAgo }} ago</em></p>
     </div>
     <div class="card weather">
         <p><strong>Humidity:</strong> {{ .Latest.Humidity }}%</p>

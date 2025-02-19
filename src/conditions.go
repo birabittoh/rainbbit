@@ -53,7 +53,7 @@ func (record *Record) parseConditions() {
 		}
 
 		c.ID = w
-		c.Description = capitalize(strings.Split(c.Description, ": ")[0])
+		c.Description = strings.Split(c.Description, ": ")[0]
 
 		record.Conditions = append(record.Conditions, c)
 	}

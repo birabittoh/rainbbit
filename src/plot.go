@@ -23,6 +23,10 @@ const (
 
 var (
 	dc = map[string]color.Color{
+		"white":        color.White,
+		"black":        color.Black,
+		"darkBG":       color.RGBA{R: 18, G: 18, B: 18, A: 255},
+		"darkGray":     color.RGBA{R: 30, G: 30, B: 30, A: 255},
 		"lightGray":    color.RGBA{R: 224, G: 224, B: 224, A: 255},
 		"dodgerBlue":   color.RGBA{R: 30, G: 144, B: 255, A: 255},
 		"redOrange":    color.RGBA{R: 255, G: 69, B: 0, A: 255},
@@ -118,14 +122,14 @@ func setAxisColor(axis *plot.Axis, color color.Color) {
 func newDarkPlot(timestamps []time.Time) *plot.Plot {
 	p := plot.New()
 	p.BackgroundColor = color.Transparent
-	setAxisColor(&p.X, color.White)
-	setAxisColor(&p.Y, color.White)
+	setAxisColor(&p.X, dc["lightGray"])
+	setAxisColor(&p.Y, dc["lightGray"])
 	p.X.Tick.Marker = customTimeTicks{times: timestamps}
 	p.X.Tick.Label.Rotation = math.Pi / -2
 	p.X.Tick.Label.XAlign = 0.05
 	p.X.Tick.Label.YAlign = 0
-	p.Title.TextStyle.Color = color.White
-	p.Legend.TextStyle.Color = color.White
+	p.Title.TextStyle.Color = dc["lightGray"]
+	p.Legend.TextStyle.Color = dc["lightGray"]
 	p.Legend.TextStyle.Font = plotFont
 	p.X.Tick.Label.Font = plotFont
 	p.Y.Tick.Label.Font = plotFont

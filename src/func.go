@@ -1,6 +1,7 @@
 package src
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -68,6 +69,16 @@ func capitalize(s string) string {
 		return s
 	}
 	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+func getHex(key string) string {
+	c, ok := dc[key]
+	if !ok {
+		return "#000000"
+	}
+
+	r, g, b, _ := c.RGBA()
+	return fmt.Sprintf("#%02x%02x%02x", uint8(r>>8), uint8(g>>8), uint8(b>>8))
 }
 
 func getEnvDefault(key, def string) string {

@@ -24,9 +24,16 @@ const (
 	week = 24 * 7 * time.Hour
 )
 
-var tmpl map[string]*template.Template
+var (
+	tmpl    map[string]*template.Template
+	funcMap = template.FuncMap{
+		"capitalize": capitalize,
+		"getHex":     getHex,
+	}
+)
 
 type PageData struct {
+	DC         func(string) string
 	FontFamily string
 	OneWeekAgo int64
 	From       string
@@ -181,13 +188,17 @@ func getPlot(w http.ResponseWriter, r *http.Request) {
 	executeTemplateSafe(w, plotPath, pd)
 }
 
+func parseTemplate(path string) *template.Template {
+	return template.Must(template.New(path).Funcs(funcMap).ParseFiles(path, basePath))
+}
+
 func getServeMux() *http.ServeMux {
 	// init templates
 	tmpl = make(map[string]*template.Template)
 
-	tmpl[indexPath] = template.Must(template.ParseFiles(indexPath, basePath))
-	tmpl[recordsPath] = template.Must(template.ParseFiles(recordsPath, basePath))
-	tmpl[plotPath] = template.Must(template.ParseFiles(plotPath, basePath))
+	tmpl[indexPath] = parseTemplate(indexPath)
+	tmpl[recordsPath] = parseTemplate(recordsPath)
+	tmpl[plotPath] = parseTemplate(plotPath)
 
 	// init conditions
 	var err error
