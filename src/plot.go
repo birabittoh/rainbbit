@@ -15,6 +15,9 @@ import (
 )
 
 const (
+	plotWidth  = 7 * vg.Inch
+	plotHeight = 4 * vg.Inch
+	fontFamily = "Arial, sans-serif"
 	tickFormat = "15:04 02/01"
 )
 
@@ -141,6 +144,8 @@ func getPlotSVG(p *plot.Plot, w vg.Length, h vg.Length) (buf bytes.Buffer, err e
 		err = errors.New("errore nella scrittura del plot SVG: " + err.Error())
 		return
 	}
+
+	buf = *bytes.NewBuffer(bytes.ReplaceAll(buf.Bytes(), []byte("Liberation Sans"), []byte(fontFamily)))
 	return
 }
 

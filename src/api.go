@@ -10,21 +10,16 @@ import (
 	"os"
 	"strconv"
 	"time"
-
-	"gonum.org/v1/plot/vg"
 )
 
 const (
 	base = "base"
 	ps   = string(os.PathSeparator)
 
-	basePath    = "templates" + ps + base + ".html"
-	indexPath   = "templates" + ps + "index.html"
-	recordsPath = "templates" + ps + "records.html"
-	plotPath    = "templates" + ps + "plot.html"
-
-	plotWidth  = 7 * vg.Inch
-	plotHeight = 4 * vg.Inch
+	basePath    = "templates" + ps + base + ".gohtml"
+	indexPath   = "templates" + ps + "index.gohtml"
+	recordsPath = "templates" + ps + "records.gohtml"
+	plotPath    = "templates" + ps + "plot.gohtml"
 
 	week = 24 * 7 * time.Hour
 )
@@ -32,6 +27,7 @@ const (
 var tmpl map[string]*template.Template
 
 type PageData struct {
+	FontFamily string
 	OneWeekAgo int64
 	From       string
 	To         string
@@ -64,6 +60,7 @@ func getLimits(r *http.Request) (q url.Values, from int64, to int64) {
 
 func getPageData(q url.Values) *PageData {
 	return &PageData{
+		FontFamily: fontFamily,
 		OneWeekAgo: time.Now().Add(-week).Unix(),
 		From:       q.Get("from"),
 		To:         q.Get("to"),
