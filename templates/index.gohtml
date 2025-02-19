@@ -1,4 +1,4 @@
-{{ define "head" }}<title>{{ .Latest.Title }}</title>
+{{ define "head" }}<title>{{ capitalize .Latest.Title }}</title>
 <link rel="icon" href="//openweathermap.org/img/wn/{{ .Latest.Favicon }}.png">{{ end }}
 {{ define "body" }}
 <div class="container">
