@@ -23,7 +23,7 @@ func rateLimiterMiddleware(next http.Handler) http.Handler {
 		limiterMutex.Lock()
 		limiter, exists := limiters[ip]
 		if !exists {
-			limiter = rate.NewLimiter(1, 15) // 1 richiesta al secondo, burst massimo di 15
+			limiter = rate.NewLimiter(2, 15) // 2 richieste al secondo, burst massimo di 15
 			limiters[ip] = limiter
 		}
 		limiterMutex.Unlock()
