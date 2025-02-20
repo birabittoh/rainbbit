@@ -12,6 +12,8 @@ import (
 	"gonum.org/v1/plot/font"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
+
+	bh "github.com/birabittoh/bunnyhue"
 )
 
 const (
@@ -22,21 +24,6 @@ const (
 )
 
 var (
-	dc = map[string]color.Color{
-		"white":        color.White,
-		"black":        color.Black,
-		"darkBG":       color.RGBA{R: 18, G: 18, B: 18, A: 255},
-		"darkGray":     color.RGBA{R: 30, G: 30, B: 30, A: 255},
-		"lightGray":    color.RGBA{R: 224, G: 224, B: 224, A: 255},
-		"dodgerBlue":   color.RGBA{R: 30, G: 144, B: 255, A: 255},
-		"redOrange":    color.RGBA{R: 255, G: 69, B: 0, A: 255},
-		"limeGreen":    color.RGBA{R: 50, G: 205, B: 50, A: 255},
-		"gold":         color.RGBA{R: 255, G: 215, B: 0, A: 255},
-		"orchid":       color.RGBA{R: 218, G: 112, B: 214, A: 255},
-		"mediumPurple": color.RGBA{R: 147, G: 112, B: 219, A: 255},
-		"cyan":         color.RGBA{R: 0, G: 255, B: 255, A: 255},
-	}
-
 	plotFont = font.Font{
 		Typeface: "Liberation",
 		Variant:  "Sans",
@@ -119,17 +106,17 @@ func setAxisColor(axis *plot.Axis, color color.Color) {
 	axis.Tick.Label.Color = color
 }
 
-func newDarkPlot(timestamps []time.Time) *plot.Plot {
+func newPlot(timestamps []time.Time, palette *bh.Palette) *plot.Plot {
 	p := plot.New()
 	p.BackgroundColor = color.Transparent
-	setAxisColor(&p.X, dc["lightGray"])
-	setAxisColor(&p.Y, dc["lightGray"])
+	setAxisColor(&p.X, palette.Primary)
+	setAxisColor(&p.Y, palette.Primary)
 	p.X.Tick.Marker = customTimeTicks{times: timestamps}
 	p.X.Tick.Label.Rotation = math.Pi / -2
 	p.X.Tick.Label.XAlign = 0.05
 	p.X.Tick.Label.YAlign = 0
-	p.Title.TextStyle.Color = dc["lightGray"]
-	p.Legend.TextStyle.Color = dc["lightGray"]
+	p.Title.TextStyle.Color = palette.Primary
+	p.Legend.TextStyle.Color = palette.Primary
 	p.Legend.TextStyle.Font = plotFont
 	p.X.Tick.Label.Font = plotFont
 	p.Y.Tick.Label.Font = plotFont
@@ -153,7 +140,7 @@ func getPlotSVG(p *plot.Plot, w vg.Length, h vg.Length) (buf bytes.Buffer, err e
 	return
 }
 
-func plotMeasure(measure string, from int64, to int64) (p *plot.Plot, err error) {
+func plotMeasure(measure string, from int64, to int64, palette *bh.Palette) (p *plot.Plot, err error) {
 	dp, err := getDataPoints([]string{measure}, from, to)
 	if err != nil {
 		err = errors.New("errore nella lettura dei dati: " + err.Error())
@@ -170,9 +157,9 @@ func plotMeasure(measure string, from int64, to int64) (p *plot.Plot, err error)
 	}
 
 	// Plot the data
-	p = newDarkPlot(timestamps)
+	p = newPlot(timestamps, palette)
 
-	addLines(p, pts, dc["lightGray"], false, capitalize(measure))
+	addLines(p, pts, palette.Primary, false, capitalize(measure))
 
 	return
 }
@@ -193,7 +180,7 @@ func addLines(p *plot.Plot, points plotter.XYs, color color.Color, dashed bool, 
 	return nil
 }
 
-func plotTemperature(from int64, to int64) (p *plot.Plot, err error) {
+func plotTemperature(from int64, to int64, palette *bh.Palette) (p *plot.Plot, err error) {
 	dp, err := getDataPoints([]string{"temp", "temp_min", "temp_max", "feels_like"}, from, to)
 	if err != nil {
 		err = errors.New("errore nella lettura dei dati: " + err.Error())
@@ -221,22 +208,22 @@ func plotTemperature(from int64, to int64) (p *plot.Plot, err error) {
 		timestamps = append(timestamps, time.Unix(int64(dp[i].Dt), 0).Round(time.Minute))
 	}
 
-	p = newDarkPlot(timestamps)
+	p = newPlot(timestamps, palette)
 
 	// Add the plot points to the plot
-	err = addLines(p, flPts, dc["gold"], true, "Feels Like")
+	err = addLines(p, flPts, palette.Orange, true, "Feels Like")
 	if err != nil {
 		return
 	}
-	err = addLines(p, tPts, dc["lightGray"], false, "Temp")
+	err = addLines(p, tPts, palette.Primary, false, "Temp")
 	if err != nil {
 		return
 	}
-	err = addLines(p, tMinPts, dc["dodgerBlue"], false, "Min")
+	err = addLines(p, tMinPts, palette.Blue, false, "Min")
 	if err != nil {
 		return
 	}
-	err = addLines(p, tMaxPts, dc["redOrange"], false, "Max")
+	err = addLines(p, tMaxPts, palette.Red, false, "Max")
 	if err != nil {
 		return
 	}

@@ -10,6 +10,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	bh "github.com/birabittoh/bunnyhue"
 )
 
 const (
@@ -33,9 +35,10 @@ var (
 )
 
 type PageData struct {
-	DC         func(string) string
+	Palette    *bh.Palette
 	FontFamily string
 	OneWeekAgo int64
+	Theme      string
 	From       string
 	To         string
 	Measure    string
@@ -65,10 +68,19 @@ func getLimits(r *http.Request) (q url.Values, from int64, to int64) {
 	return
 }
 
+func getPalette(q url.Values) *bh.Palette {
+	if q.Get("theme") == "light" {
+		return &bh.Light
+	}
+	return &bh.Dark
+}
+
 func getPageData(q url.Values) *PageData {
 	return &PageData{
+		Palette:    getPalette(q),
 		FontFamily: fontFamily,
 		OneWeekAgo: time.Now().Add(-week).Unix(),
+		Theme:      q.Get("theme"),
 		From:       q.Get("from"),
 		To:         q.Get("to"),
 	}
@@ -109,14 +121,14 @@ func getAPIMeasures(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAPIPlot(w http.ResponseWriter, r *http.Request) {
-	_, from, to := getLimits(r)
+	q, from, to := getLimits(r)
 	measure := r.PathValue("measure")
 	if measure == "" {
 		http.Error(w, "Misura non specificata", http.StatusBadRequest)
 		return
 	}
 
-	p, err := plotMeasure(measure, from, to)
+	p, err := plotMeasure(measure, from, to, getPalette(q))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -134,9 +146,9 @@ func getAPIPlot(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAPITemp(w http.ResponseWriter, r *http.Request) {
-	_, from, to := getLimits(r)
+	q, from, to := getLimits(r)
 
-	p, err := plotTemperature(from, to)
+	p, err := plotTemperature(from, to, getPalette(q))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

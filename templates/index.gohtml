@@ -6,7 +6,7 @@
         <div class="container" style="gap: 0px;">{{ range .Latest.Conditions }}
             <div class="text-center">
                 <p><strong>{{ capitalize .Description }}</strong></p>
-                <img src="//openweathermap.org/img/wn/{{ .Icon }}@4x.png" alt="{{ .Name }}" title="{{ .Name }}">
+                <img src="//openweathermap.org/img/wn/{{ .Icon }}@4x.png" alt="{{ .Name }}" title="{{ .Name }}" style="filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.5));">
             </div>{{ end }}
         </div>
     <p class="text-center" style="font-size: 10pt;"><em>Last updated {{ .Latest.TimeAgo }} ago</em></p>
@@ -26,24 +26,19 @@
 </div>
 <div class="text-center">
     <p>
-        <a href="?from=0">All</a>,
-        <a href="?from={{ .OneWeekAgo }}">1w</a>,
-        <a href="?">1d</a>
+        <a href="?theme={{ .Theme }}&from=0">All</a>,
+        <a href="?theme={{ .Theme }}&from={{ .OneWeekAgo }}">1w</a>,
+        <a href="?theme={{ .Theme }}">1d</a>
     </p>
     <div class="container">
         <div class="card plot">
             <p>Temperature</p>
-            <img src="/api/temp?from={{ .From }}&to={{ .To }}" alt="Could not display temp plot.">
+            <img src="/api/temp?from={{ .From }}&to={{ .To }}&theme={{ .Theme }}" alt="Could not display temp plot.">
         </div>
         <div class="card plot">
             <p>Humidity</p>
-            <img src="/api/plot/humidity?from={{ .From }}&to={{ .To }}" alt="Could not display humidity plot.">
+            <img src="/api/plot/humidity?from={{ .From }}&to={{ .To }}&theme={{ .Theme }}" alt="Could not display humidity plot.">
         </div>
     </div>
-    <p>
-        <a href="/plot/pressure">Plots</a>,
-        <a href="/records">Table</a>,
-        <a href="/api/records">API</a>
-    </p>
 </div>
 {{ end }}

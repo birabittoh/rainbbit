@@ -2,14 +2,14 @@
 {{ define "body" }}<div class="container">
     <div class="card weather text-center" style="max-width: 100%;">
         <p><strong>{{ .Measure }}</strong></p>
-        <img src="/api/plot/{{ .Measure }}?from={{ .From }}&to={{ .To }}" alt="Could not display plot." style="max-width: 100%;"><br />
+        <img src="/api/plot/{{ .Measure }}?theme={{ .Theme }}&from={{ .From }}&to={{ .To }}" alt="Could not display plot." style="max-width: 100%;"><br />
         <p>
-            <a href="?from=0">All</a>,
-            <a href="?from={{ .OneWeekAgo }}">1w</a>,
-            <a href="?">1d</a>
+            <a href="?theme={{ .Theme }}&from=0">All</a>,
+            <a href="?theme={{ .Theme }}&from={{ .OneWeekAgo }}">1w</a>,
+            <a href="?theme={{ .Theme }}&">1d</a>
         </p>
     </div>
     <div class="card weather" style="min-width: auto;">{{ range .Measures }}
-        <p><a href="/plot/{{ . }}?from={{ $.From }}&to={{ $.To }}">{{ . }}</a></p>{{ end }}
+        <p><a href="/plot/{{ . }}?theme={{ $.Theme }}&from={{ $.From }}&to={{ $.To }}">{{ . }}</a></p>{{ end }}
     </div>
 </div>{{ end }}

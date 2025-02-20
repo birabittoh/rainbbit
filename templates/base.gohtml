@@ -5,55 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
       body {
-          font-family: {{ .FontFamily }};
-          background-color: {{ getHex "darkBG" }};
-          color: {{ getHex "lightGray" }};
+        font-family: {{ .FontFamily }};
+        background-color: {{ getHex .Palette.Background }};
+        color: {{ getHex .Palette.Primary }};
       }
       .card {
-          background-color: {{ getHex "darkGray" }};
-          padding: 20px;
-          border-radius: 10px;
-          box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-          min-width: 220px;
-          flex-grow: 0;
-          flex-basis: auto;
-          flex-shrink: 1;
-          max-width: 45%;
+        background-color: {{ getHex .Palette.Contrast }};
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        min-width: 220px;
+        flex-grow: 0;
+        flex-basis: auto;
+        flex-shrink: 1;
+        max-width: 45%;
       }
       .weather p {
-          margin: 10px 0;
+        margin: 10px 0;
       }
       .container {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          gap: 20px;
-          flex-wrap: wrap;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
       }
       .text-center {
         text-align: center;
       }
       table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 20px 0;
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
       }
       table, th, td {
-          border: 1px solid {{ getHex "lightGray" }};
+        border: 1px solid {{ getHex .Palette.Primary }};
       }
       th, td {
-          padding: 10px;
-          text-align: left;
+        padding: 10px;
+        text-align: left;
       }
-      th {
-          background-color: {{ getHex "darkGray" }};
-          color: {{ getHex "white" }};
-      }
-      tr:nth-child(even) {
-          background-color: {{ getHex "darkGray" }};
+      th, tr:nth-child(even) {
+        background-color: {{ getHex .Palette.Contrast }};
       }
       a, a:visited {
-        color: {{ getHex "dodgerBlue" }};
+        color: {{ getHex .Palette.Blue }};
         text-decoration: none;
       }
       a:hover {
@@ -64,16 +60,23 @@
         overflow-x: auto;
       }
       @media (max-width: 768px) {
-          .weather {
-            max-width: 100%;
-            width: 100%;
-            text-align: center;
-          }
+        .weather {
+          max-width: 100%;
+          width: 100%;
+          text-align: center;
+        }
       }
     </style>
     {{ template "head" . }}
   </head>
   <body>
     {{ template "body" . }}
+    <p class="text-center">
+        <a href="/?theme={{ .Theme }}">Home</a>,
+        <a href="/plot/pressure?theme={{ .Theme }}">Plots</a>,
+        <a href="/records?theme={{ .Theme }}">Table</a>,
+        <a href="/api/records" target="_blank">API</a>,
+        <a href="?theme={{ if not .Theme }}light{{ end }}">Theme</a>
+    </p>
   </body>
 </html>{{ end }}
