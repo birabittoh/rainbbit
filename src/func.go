@@ -110,7 +110,7 @@ func capitalize(s string) string {
 	if s == "" {
 		return s
 	}
-	return strings.ToUpper(s[:1]) + s[1:]
+	return strings.ReplaceAll(strings.ToUpper(s[:1])+s[1:], "_", " ")
 }
 
 func getHex(c color.Color) string {
@@ -120,6 +120,20 @@ func getHex(c color.Color) string {
 
 func formatTimestamp(timestamp int64) string {
 	return time.Since(time.Unix(timestamp, 0)).Round(time.Second).String()
+}
+
+func getFavicon(r Record) string {
+	if len(r.Conditions) == 0 {
+		return ""
+	}
+	return r.Conditions[0].Icon
+}
+
+func getTitle(r Record) string {
+	if len(r.Conditions) == 0 {
+		return ""
+	}
+	return capitalize(r.Conditions[0].Description)
 }
 
 func getEnvDefault(key, def string) string {

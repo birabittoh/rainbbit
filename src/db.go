@@ -63,8 +63,6 @@ type Record struct {
 	Weather string `json:"weather"`
 
 	Conditions []Condition `json:"conditions" gorm:"-"`
-	Favicon    string      `json:"-" gorm:"-"`
-	Title      string      `json:"-" gorm:"-"`
 }
 
 func alignConstraints(from int64, to int64) (f, t *int64) {

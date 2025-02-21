@@ -1,4 +1,4 @@
-{{ define "head" }}<title>Plot ({{ .Measure }})</title>{{ end }}
+{{ define "title" }}{{ capitalize .Measure }}{{ end }}
 {{ define "body" }}<div class="container">
     <div class="card weather text-center" style="max-width: 100%;">
         <p><strong>{{ .Measure }}</strong></p>

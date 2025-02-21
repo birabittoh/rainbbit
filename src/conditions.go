@@ -57,7 +57,4 @@ func (record *Record) parseConditions() {
 
 		record.Conditions = append(record.Conditions, c)
 	}
-
-	record.Favicon = record.Conditions[0].Icon
-	record.Title = record.Conditions[0].Description
 }

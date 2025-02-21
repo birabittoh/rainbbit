@@ -32,10 +32,13 @@ var (
 		"capitalize":      capitalize,
 		"getHex":          getHex,
 		"formatTimestamp": formatTimestamp,
+		"getFavicon":      getFavicon,
+		"getTitle":        getTitle,
 	}
 )
 
 type PageData struct {
+	Zone       string
 	Palette    *bh.Palette
 	FontFamily string
 	OneWeekAgo int64
@@ -84,15 +87,22 @@ func getPalette(q url.Values) *bh.Palette {
 	return &bh.Dark
 }
 
-func getPageData(q url.Values, p *bh.Palette) *PageData {
+func getPageData(q url.Values, p *bh.Palette) (*PageData, error) {
+	latest, err := getLatestRecord()
+	if err != nil {
+		return nil, err
+	}
+
 	return &PageData{
+		Zone:       zone,
 		Palette:    p,
 		FontFamily: fontFamily,
 		OneWeekAgo: time.Now().Add(-week).Unix(),
 		Theme:      q.Get("theme"),
 		From:       q.Get("from"),
 		To:         q.Get("to"),
-	}
+		Latest:     latest,
+	}, nil
 }
 
 func executeTemplateSafe(w http.ResponseWriter, t string, data any) {
@@ -190,16 +200,12 @@ func getAPITemp(w http.ResponseWriter, r *http.Request) {
 }
 
 func getIndex(w http.ResponseWriter, r *http.Request) {
-	latest, err := getLatestRecord()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	q := r.URL.Query()
 	palette := getPalette(q)
-	pd := getPageData(q, palette)
-	pd.Latest = latest
+	pd, err := getPageData(q, palette)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 
 	executeTemplateSafe(w, indexPath, pd)
 }
@@ -212,7 +218,10 @@ func getRecords(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pd := getPageData(r.URL.Query(), palette)
+	pd, err := getPageData(r.URL.Query(), palette)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 	pd.Records = records
 
 	executeTemplateSafe(w, recordsPath, pd)
@@ -221,7 +230,10 @@ func getRecords(w http.ResponseWriter, r *http.Request) {
 func getPlot(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	palette := getPalette(q)
-	pd := getPageData(q, palette)
+	pd, err := getPageData(q, palette)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 	pd.Measures = measures
 	pd.Measure = r.PathValue("measure")
 
