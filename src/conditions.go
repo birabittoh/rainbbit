@@ -11,7 +11,6 @@ import (
 var conditions map[string]Condition
 
 type Condition struct {
-	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Icon        string `json:"icon"`
@@ -52,7 +51,6 @@ func (record *Record) parseConditions() {
 			c.Icon += "n"
 		}
 
-		c.ID = w
 		c.Description = strings.Split(c.Description, ": ")[0]
 
 		record.Conditions = append(record.Conditions, c)

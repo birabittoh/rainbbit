@@ -132,6 +132,10 @@ func getAPIRecords(w http.ResponseWriter, r *http.Request) {
 	respond(w, records)
 }
 
+func getAPIConditions(w http.ResponseWriter, r *http.Request) {
+	respond(w, conditions)
+}
+
 func getAPILatest(w http.ResponseWriter, r *http.Request) {
 	latest, err := getLatestRecord()
 	if err != nil {
@@ -278,6 +282,7 @@ func getServeMux() *http.ServeMux {
 	s := http.NewServeMux()
 
 	s.HandleFunc("GET /api/records", getAPIRecords)
+	s.HandleFunc("GET /api/conditions", getAPIConditions)
 	s.HandleFunc("GET /api/latest", getAPILatest)
 	s.HandleFunc("GET /api/meta", getAPIMeta)
 	s.HandleFunc("GET /api/plot/{measure}", getAPIPlot)
