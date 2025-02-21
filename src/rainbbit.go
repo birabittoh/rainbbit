@@ -19,7 +19,10 @@ const (
 	address = ":3000"
 )
 
-var cronInterval int64
+var (
+	cronInterval int64
+	zone         string
+)
 
 // ------------------------
 // FUNZIONE MAIN
