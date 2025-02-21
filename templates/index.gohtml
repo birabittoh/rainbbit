@@ -9,7 +9,7 @@
                 <img src="//openweathermap.org/img/wn/{{ .Icon }}@4x.png" alt="{{ .Name }}" title="{{ .Name }}" style="filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.5));">
             </div>{{ end }}
         </div>
-    <p class="text-center" style="font-size: 10pt;"><em>Last updated {{ .Latest.TimeAgo }} ago</em></p>
+    <p class="text-center" style="font-size: 10pt;"><em>Last updated {{ formatTimestamp .Latest.Dt }} ago</em></p>
     </div>
     <div class="card weather">
         <p><strong>Humidity:</strong> {{ .Latest.Humidity }}%</p>

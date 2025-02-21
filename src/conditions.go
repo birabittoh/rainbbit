@@ -60,5 +60,4 @@ func (record *Record) parseConditions() {
 
 	record.Favicon = record.Conditions[0].Icon
 	record.Title = record.Conditions[0].Description
-	record.TimeAgo = time.Since(dt).Round(time.Second).String()
 }

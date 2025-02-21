@@ -116,6 +116,10 @@ func getHex(c color.Color) string {
 	return fmt.Sprintf("#%02x%02x%02x", uint8(r>>8), uint8(g>>8), uint8(b>>8))
 }
 
+func formatTimestamp(timestamp int64) string {
+	return time.Since(time.Unix(timestamp, 0)).Round(time.Second).String()
+}
+
 func getEnvDefault(key, def string) string {
 	if val, ok := os.LookupEnv(key); ok {
 		return val

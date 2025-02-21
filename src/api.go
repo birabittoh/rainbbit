@@ -29,8 +29,9 @@ const (
 var (
 	tmpl    map[string]*template.Template
 	funcMap = template.FuncMap{
-		"capitalize": capitalize,
-		"getHex":     getHex,
+		"capitalize":      capitalize,
+		"getHex":          getHex,
+		"formatTimestamp": formatTimestamp,
 	}
 )
 
