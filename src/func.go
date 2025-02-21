@@ -7,8 +7,10 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/briandowns/openweathermap"
+	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 )
 
@@ -17,6 +19,22 @@ var current *openweathermap.CurrentWeatherData
 // ------------------------
 // FUNZIONI DI SUPPORTO
 // ------------------------
+
+func getCronInterval(cronExpr string) (uint, error) {
+	parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+
+	// Parse the cron expression
+	sched, err := parser.Parse(cronExpr)
+	if err != nil {
+		return 0, fmt.Errorf("invalid cron expression: %v", err)
+	}
+
+	now := time.Now()
+	next := sched.Next(now)
+	nextAfter := sched.Next(next)
+
+	return uint(nextAfter.Sub(next).Seconds()), nil
+}
 
 // fetchAndSaveWeather effettua la chiamata all'API, mappa i dati nei modelli e li salva nel database.
 func fetchAndSaveWeather(db *gorm.DB, coords *openweathermap.Coordinates) {

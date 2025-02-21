@@ -19,6 +19,8 @@ const (
 	address = ":3000"
 )
 
+var cronInterval uint
+
 // ------------------------
 // FUNZIONE MAIN
 // ------------------------
@@ -66,6 +68,10 @@ func Main() {
 	})
 	if err != nil {
 		log.Fatalln("Errore nella creazione del cron job:", err)
+	}
+	cronInterval, err = getCronInterval(spec)
+	if err != nil {
+		log.Fatalln("Errore nel calcolo dell'intervallo del cron job:", err)
 	}
 
 	// Avvio del cron scheduler

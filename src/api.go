@@ -53,8 +53,8 @@ func respond(w http.ResponseWriter, data interface{}) {
 	json.NewEncoder(w).Encode(data)
 }
 
-func getLimits(r *http.Request) (q url.Values, from int64, to int64) {
-	q = r.URL.Query()
+func getLimits(r *http.Request) (from int64, to int64, palette *bh.Palette) {
+	q := r.URL.Query()
 
 	from, err := strconv.ParseInt(q.Get("from"), 10, 64)
 	if err != nil {
@@ -65,6 +65,7 @@ func getLimits(r *http.Request) (q url.Values, from int64, to int64) {
 		to = 0
 	}
 
+	palette = getPalette(q)
 	return
 }
 
@@ -75,9 +76,9 @@ func getPalette(q url.Values) *bh.Palette {
 	return &bh.Dark
 }
 
-func getPageData(q url.Values) *PageData {
+func getPageData(q url.Values, p *bh.Palette) *PageData {
 	return &PageData{
-		Palette:    getPalette(q),
+		Palette:    p,
 		FontFamily: fontFamily,
 		OneWeekAgo: time.Now().Add(-week).Unix(),
 		Theme:      q.Get("theme"),
@@ -96,7 +97,7 @@ func executeTemplateSafe(w http.ResponseWriter, t string, data any) {
 }
 
 func getAPIRecords(w http.ResponseWriter, r *http.Request) {
-	_, from, to := getLimits(r)
+	from, to, _ := getLimits(r)
 	records, err := getAllRecords(from, to)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -121,14 +122,14 @@ func getAPIMeasures(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAPIPlot(w http.ResponseWriter, r *http.Request) {
-	q, from, to := getLimits(r)
+	from, to, palette := getLimits(r)
 	measure := r.PathValue("measure")
 	if measure == "" {
 		http.Error(w, "Misura non specificata", http.StatusBadRequest)
 		return
 	}
 
-	p, err := plotMeasure(measure, from, to, getPalette(q))
+	p, err := plotMeasure(measure, from, to, palette)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -146,9 +147,9 @@ func getAPIPlot(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAPITemp(w http.ResponseWriter, r *http.Request) {
-	q, from, to := getLimits(r)
+	from, to, palette := getLimits(r)
 
-	p, err := plotTemperature(from, to, getPalette(q))
+	p, err := plotTemperature(from, to, palette)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -172,28 +173,32 @@ func getIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pd := getPageData(r.URL.Query())
+	q := r.URL.Query()
+	palette := getPalette(q)
+	pd := getPageData(q, palette)
 	pd.Latest = latest
 
 	executeTemplateSafe(w, indexPath, pd)
 }
 
 func getRecords(w http.ResponseWriter, r *http.Request) {
-	q, from, to := getLimits(r)
+	from, to, palette := getLimits(r)
 	records, err := getAllRecords(from, to)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	pd := getPageData(q)
+	pd := getPageData(r.URL.Query(), palette)
 	pd.Records = records
 
 	executeTemplateSafe(w, recordsPath, pd)
 }
 
 func getPlot(w http.ResponseWriter, r *http.Request) {
-	pd := getPageData(r.URL.Query())
+	q := r.URL.Query()
+	palette := getPalette(q)
+	pd := getPageData(q, palette)
 	pd.Measures = measures
 	pd.Measure = r.PathValue("measure")
 

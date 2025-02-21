@@ -76,7 +76,7 @@
         <a href="/plot/pressure?theme={{ .Theme }}">Plots</a>,
         <a href="/records?theme={{ .Theme }}">Table</a>,
         <a href="/api/records" target="_blank">API</a>,
-        <a href="?theme={{ if not .Theme }}light{{ end }}">Theme</a>
+        <a href="?{{ if eq .Theme "" }}theme=light{{ end }}">Theme</a>
     </p>
   </body>
 </html>{{ end }}
