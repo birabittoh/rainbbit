@@ -137,7 +137,7 @@ func getAPIPlot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	f, t := alignConstraints(from, to)
-	key := getKey([]string{measure}, f, t)
+	key := getKey([]string{measure, palette.Name}, f, t)
 
 	value, err := plotCache.Get(key)
 	if err == nil {
@@ -165,7 +165,7 @@ func getAPITemp(w http.ResponseWriter, r *http.Request) {
 	from, to, palette := getLimits(r)
 
 	f, t := alignConstraints(from, to)
-	key := getKey([]string{"t"}, f, t)
+	key := getKey([]string{"t", palette.Name}, f, t)
 	value, err := plotCache.Get(key)
 	if err == nil {
 		writePlot(w, *value)

@@ -3,7 +3,7 @@ module github.com/birabittoh/rainbbit
 go 1.23.6
 
 require (
-	github.com/birabittoh/bunnyhue v0.0.0-20250220165908-4fa519c78bc2
+	github.com/birabittoh/bunnyhue v1.0.0
 	github.com/birabittoh/myks v0.0.2
 	github.com/briandowns/openweathermap v0.21.1
 	github.com/glebarez/sqlite v1.11.0
