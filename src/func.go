@@ -20,7 +20,7 @@ var current *openweathermap.CurrentWeatherData
 // FUNZIONI DI SUPPORTO
 // ------------------------
 
-func getCronInterval(cronExpr string) (uint, error) {
+func getCronInterval(cronExpr string) (int64, error) {
 	parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
 
 	// Parse the cron expression
@@ -33,7 +33,7 @@ func getCronInterval(cronExpr string) (uint, error) {
 	next := sched.Next(now)
 	nextAfter := sched.Next(next)
 
-	return uint(nextAfter.Sub(next).Seconds()), nil
+	return int64(nextAfter.Sub(next).Seconds()), nil
 }
 
 // fetchAndSaveWeather effettua la chiamata all'API, mappa i dati nei modelli e li salva nel database.

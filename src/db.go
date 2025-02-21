@@ -63,18 +63,31 @@ type Record struct {
 	TimeAgo    string      `json:"-" gorm:"-"`
 }
 
-func addConstraints(query *gorm.DB, from int64, to int64) *gorm.DB {
-	if from != 0 {
-		query = query.Where("dt >= ?", from)
+func parseConstraints(from int64, to int64) (f, t *int64) {
+	if from != 0 { // round down to the nearest cron interval
+		alignedFrom := (from / cronInterval) * cronInterval
+		f = &alignedFrom
 	}
-	if to != 0 {
-		query = query.Where("dt <= ?", to)
+	if to != 0 { // round up to the nearest cron interval
+		alignedTo := ((to + cronInterval - 1) / cronInterval) * cronInterval
+		t = &alignedTo
+	}
+	return
+}
+
+func addConstraints(query *gorm.DB, from, to *int64) *gorm.DB {
+	if from != nil {
+		query = query.Where("dt >= ?", *from)
+	}
+	if to != nil {
+		query = query.Where("dt <= ?", *to)
 	}
 	return query
 }
 
 func getAllRecords(from int64, to int64) (records []Record, err error) {
-	query := addConstraints(db.Model(&Record{}), from, to)
+	f, t := parseConstraints(from, to)
+	query := addConstraints(db.Model(&Record{}), f, t)
 
 	err = query.Find(&records).Error
 	if err != nil {
@@ -110,13 +123,15 @@ func getDataPoints(measures []string, from int64, to int64) (dp []DataPoint, err
 		return
 	}
 
-	query := db.Model(&Record{})
+	f, t := parseConstraints(from, to)
 
 	selectText := "dt"
 	for i, measure := range measures {
 		selectText += ", " + measure + " as value" + strconv.Itoa(i)
 	}
-	query = addConstraints(query.Select(selectText), from, to)
+
+	query := db.Model(&Record{})
+	query = addConstraints(query.Select(selectText), f, t)
 
 	err = query.Scan(&dp).Error
 	if err != nil {
