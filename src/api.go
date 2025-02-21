@@ -35,6 +35,12 @@ var (
 		"getFavicon":      getFavicon,
 		"getTitle":        getTitle,
 	}
+
+	palettes = map[string]*bh.Palette{
+		"":      &bh.Dark, // default
+		"light": &bh.Light,
+	}
+	themes []string
 )
 
 type PageData struct {
@@ -81,10 +87,11 @@ func getLimits(r *http.Request) (from int64, to int64, palette *bh.Palette) {
 }
 
 func getPalette(q url.Values) *bh.Palette {
-	if q.Get("theme") == "light" {
-		return &bh.Light
+	p, ok := palettes[q.Get("theme")]
+	if ok {
+		return p
 	}
-	return &bh.Dark
+	return palettes[""]
 }
 
 func getPageData(q url.Values, p *bh.Palette) (*PageData, error) {
@@ -135,8 +142,12 @@ func getAPILatest(w http.ResponseWriter, r *http.Request) {
 	respond(w, latest)
 }
 
-func getAPIMeasures(w http.ResponseWriter, r *http.Request) {
-	respond(w, measures)
+func getAPIMeta(w http.ResponseWriter, r *http.Request) {
+	respond(w, map[string]any{
+		"zone":     zone,
+		"measures": measures,
+		"themes":   themes,
+	})
 }
 
 func getAPIPlot(w http.ResponseWriter, r *http.Request) {
@@ -252,6 +263,10 @@ func getServeMux() *http.ServeMux {
 	tmpl[recordsPath] = parseTemplate(recordsPath)
 	tmpl[plotPath] = parseTemplate(plotPath)
 
+	for k := range palettes {
+		themes = append(themes, k)
+	}
+
 	// init conditions
 	var err error
 	conditions, err = loadConditions()
@@ -264,7 +279,7 @@ func getServeMux() *http.ServeMux {
 
 	s.HandleFunc("GET /api/records", getAPIRecords)
 	s.HandleFunc("GET /api/latest", getAPILatest)
-	s.HandleFunc("GET /api/measures", getAPIMeasures)
+	s.HandleFunc("GET /api/meta", getAPIMeta)
 	s.HandleFunc("GET /api/plot/{measure}", getAPIPlot)
 	s.HandleFunc("GET /api/temp", getAPITemp)
 
