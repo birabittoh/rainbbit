@@ -16,6 +16,26 @@ All of this is done in a single binary file that weighs less than 30MB.
 - [x] Cache the database requests.
 - [x] Cache the plots.
 
+## API endpoints
+
+### GET /api/records
+Retrieves weather records stored in the database.
+
+### GET /api/latest
+Gets the latest weather record.
+
+### GET /api/conditions
+Fetches all possible weather conditions.
+
+### GET /api/meta
+Provides the zone name, lists plottable measures and available themes.
+
+### GET /api/plot/{measure}
+Generates an SVG plot for any measure.
+
+### GET /api/temp
+Generates a custom SVG plot for temperatures.
+
 ## Instructions
 First of all, create your own `.env` file:
 ```sh
