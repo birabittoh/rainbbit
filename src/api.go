@@ -53,16 +53,23 @@ func respond(w http.ResponseWriter, data interface{}) {
 	json.NewEncoder(w).Encode(data)
 }
 
+func writePlot(w http.ResponseWriter, b []byte) {
+	w.Header().Set("Content-Type", "image/svg+xml")
+	w.WriteHeader(http.StatusOK)
+	w.Write(b)
+}
+
 func getLimits(r *http.Request) (from int64, to int64, palette *bh.Palette) {
 	q := r.URL.Query()
+	n := time.Now()
 
 	from, err := strconv.ParseInt(q.Get("from"), 10, 64)
 	if err != nil {
-		from = time.Now().Add(-24 * time.Hour).Unix()
+		from = n.Add(-24 * time.Hour).Unix()
 	}
 	to, err = strconv.ParseInt(q.Get("to"), 10, 64)
 	if err != nil {
-		to = 0
+		to = n.Unix()
 	}
 
 	palette = getPalette(q)
@@ -129,41 +136,56 @@ func getAPIPlot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p, err := plotMeasure(measure, from, to, palette)
+	f, t := alignConstraints(from, to)
+	key := getKey([]string{measure}, f, t)
+
+	value, err := plotCache.Get(key)
+	if err == nil {
+		writePlot(w, *value)
+		return
+	}
+
+	p, err := plotMeasure(measure, f, t, palette)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	buf, err := getPlotSVG(p, plotWidth, plotHeight)
+	b, err := getPlotSVG(p, plotWidth, plotHeight)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "image/svg+xml")
-	w.WriteHeader(http.StatusOK)
-	w.Write(buf.Bytes())
+	plotCache.Set(key, b, 25*time.Minute)
+	writePlot(w, b)
 }
 
 func getAPITemp(w http.ResponseWriter, r *http.Request) {
 	from, to, palette := getLimits(r)
 
-	p, err := plotTemperature(from, to, palette)
+	f, t := alignConstraints(from, to)
+	key := getKey([]string{"t"}, f, t)
+	value, err := plotCache.Get(key)
+	if err == nil {
+		writePlot(w, *value)
+		return
+	}
+
+	p, err := plotTemperature(f, t, palette)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	buf, err := getPlotSVG(p, plotWidth, plotHeight)
+	b, err := getPlotSVG(p, plotWidth, plotHeight)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "image/svg+xml")
-	w.WriteHeader(http.StatusOK)
-	w.Write(buf.Bytes())
+	plotCache.Set(key, b, 25*time.Minute)
+	writePlot(w, b)
 }
 
 func getIndex(w http.ResponseWriter, r *http.Request) {

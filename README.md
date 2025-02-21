@@ -14,7 +14,7 @@ All of this is done in a single binary file that weighs less than 30MB.
 ## TODO
 - [x] Add a light theme.
 - [x] Cache the database requests.
-- [ ] Cache the plots.
+- [x] Cache the plots.
 
 ## Instructions
 First of all, create your own `.env` file:

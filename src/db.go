@@ -22,7 +22,7 @@ var (
 	measures []string
 
 	recordsCache = myks.New[[]Record](30 * time.Minute)
-	dpCache      = myks.New[[]DataPoint](30 * time.Minute)
+	dpCache      = myks.New[[]DataPoint](31 * time.Minute)
 )
 
 // ------------------------
@@ -69,15 +69,12 @@ type Record struct {
 }
 
 func alignConstraints(from int64, to int64) (f, t *int64) {
-	if from != 0 { // round down to the nearest cron interval
-		alignedFrom := (from / cronInterval) * cronInterval
-		f = &alignedFrom
-	}
-	if to != 0 { // round up to the nearest cron interval
-		alignedTo := ((to + cronInterval - 1) / cronInterval) * cronInterval
-		t = &alignedTo
-	}
-	return
+	// round down to the nearest cron interval
+	alignedFrom := (from / cronInterval) * cronInterval
+	// round up to the nearest cron interval
+	alignedTo := ((to + cronInterval - 1) / cronInterval) * cronInterval
+
+	return &alignedFrom, &alignedTo
 }
 
 func addConstraints(query *gorm.DB, from, to *int64) *gorm.DB {
@@ -92,7 +89,7 @@ func addConstraints(query *gorm.DB, from, to *int64) *gorm.DB {
 
 func getAllRecords(from int64, to int64) (records []Record, err error) {
 	f, t := alignConstraints(from, to)
-	key := getKeyMeasures([]string{"*"}, f, t)
+	key := getKey([]string{"*"}, f, t)
 
 	value, err := recordsCache.Get(key)
 	if err == nil {
@@ -118,10 +115,8 @@ func getLatestRecord() (record Record, err error) {
 	value, err := recordsCache.Get("latest")
 	if err == nil {
 		record = (*value)[0]
-		println("cache hit")
 		return
 	}
-	println("cache miss")
 
 	err = db.Last(&record).Error
 	if err != nil {
@@ -133,7 +128,7 @@ func getLatestRecord() (record Record, err error) {
 	return
 }
 
-func getDataPoints(measures []string, from int64, to int64) (dp []DataPoint, err error) {
+func getDataPoints(measures []string, f, t *int64) (dp []DataPoint, err error) {
 	for _, measure := range measures {
 		if !slices.Contains(measures, measure) {
 			err = errors.New("la misura richiesta non esiste")
@@ -146,8 +141,7 @@ func getDataPoints(measures []string, from int64, to int64) (dp []DataPoint, err
 		return
 	}
 
-	f, t := alignConstraints(from, to)
-	key := getKeyMeasures(measures, f, t)
+	key := getKey(measures, f, t)
 
 	value, err := dpCache.Get(key)
 	if err == nil {

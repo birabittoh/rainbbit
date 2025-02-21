@@ -40,15 +40,17 @@ func getFromToKey(from, to *int64) (int64, int64) {
 	if from == nil {
 		f := int64(-1)
 		from = &f
+		println("from WAS UNSET")
 	}
 	if to == nil {
 		t := int64(-1)
 		to = &t
+		println("to WAS UNSET")
 	}
 	return *from, *to
 }
 
-func getKeyMeasures(m []string, from, to *int64) string {
+func getKey(m []string, from, to *int64) string {
 	f, t := getFromToKey(from, to)
 	return fmt.Sprintf("%v|%d|%d", m, f, t)
 }

@@ -14,6 +14,7 @@ import (
 	"gonum.org/v1/plot/vg"
 
 	bh "github.com/birabittoh/bunnyhue"
+	"github.com/birabittoh/myks"
 )
 
 const (
@@ -29,6 +30,8 @@ var (
 		Variant:  "Sans",
 		Size:     10,
 	}
+
+	plotCache = myks.New[[]byte](32 * time.Minute)
 )
 
 type DataPoint struct {
@@ -123,25 +126,28 @@ func newPlot(timestamps []time.Time, palette *bh.Palette) *plot.Plot {
 	return p
 }
 
-func getPlotSVG(p *plot.Plot, w vg.Length, h vg.Length) (buf bytes.Buffer, err error) {
+func getPlotSVG(p *plot.Plot, w vg.Length, h vg.Length) (b []byte, err error) {
 	writer, err := p.WriterTo(w, h, "svg")
 	if err != nil {
 		err = errors.New("errore nella creazione del writer SVG: " + err.Error())
 		return
 	}
 
+	var buf bytes.Buffer
 	_, err = writer.WriteTo(&buf)
 	if err != nil {
 		err = errors.New("errore nella scrittura del plot SVG: " + err.Error())
 		return
 	}
 
-	buf = *bytes.NewBuffer(bytes.ReplaceAll(buf.Bytes(), []byte("Liberation Sans"), []byte(fontFamily)))
+	b = bytes.ReplaceAll(buf.Bytes(), []byte("Liberation Sans"), []byte(fontFamily))
 	return
 }
 
-func plotMeasure(measure string, from int64, to int64, palette *bh.Palette) (p *plot.Plot, err error) {
-	dp, err := getDataPoints([]string{measure}, from, to)
+func plotMeasure(measure string, f, t *int64, palette *bh.Palette) (p *plot.Plot, err error) {
+	m := []string{measure}
+
+	dp, err := getDataPoints(m, f, t)
 	if err != nil {
 		err = errors.New("errore nella lettura dei dati: " + err.Error())
 		return
@@ -180,8 +186,8 @@ func addLines(p *plot.Plot, points plotter.XYs, color color.Color, dashed bool, 
 	return nil
 }
 
-func plotTemperature(from int64, to int64, palette *bh.Palette) (p *plot.Plot, err error) {
-	dp, err := getDataPoints([]string{"temp", "temp_min", "temp_max", "feels_like"}, from, to)
+func plotTemperature(f, t *int64, palette *bh.Palette) (p *plot.Plot, err error) {
+	dp, err := getDataPoints([]string{"temp", "temp_min", "temp_max", "feels_like"}, f, t)
 	if err != nil {
 		err = errors.New("errore nella lettura dei dati: " + err.Error())
 		return
