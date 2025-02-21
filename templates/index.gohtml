@@ -26,9 +26,9 @@
 </div>
 <div class="text-center">
     <p>
-        <a href="?theme={{ .Theme }}&from=0">All</a>,
-        <a href="?theme={{ .Theme }}&from={{ .OneWeekAgo }}">1w</a>,
-        <a href="?theme={{ .Theme }}">1d</a>
+        <a href="?{{ if .Theme }}theme={{ .Theme }}&{{ end }}from=0">All</a>,
+        <a href="?{{ if .Theme }}theme={{ .Theme }}&{{ end }}from={{ .OneWeekAgo }}">1w</a>,
+        <a href="?{{ if .Theme }}theme={{ .Theme }}{{ end }}">1d</a>
     </p>
     <div class="container">
         <div class="card plot">

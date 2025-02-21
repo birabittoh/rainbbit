@@ -4,9 +4,9 @@
         <p><strong>{{ .Measure }}</strong></p>
         <img src="/api/plot/{{ .Measure }}?theme={{ .Theme }}&from={{ .From }}&to={{ .To }}" alt="Could not display plot." style="max-width: 100%;"><br />
         <p>
-            <a href="?theme={{ .Theme }}&from=0">All</a>,
-            <a href="?theme={{ .Theme }}&from={{ .OneWeekAgo }}">1w</a>,
-            <a href="?theme={{ .Theme }}&">1d</a>
+            <a href="?{{ if .Theme }}theme={{ .Theme }}&{{ end }}from=0">All</a>,
+            <a href="?{{ if .Theme }}theme={{ .Theme }}&{{ end }}from={{ .OneWeekAgo }}">1w</a>,
+            <a href="?{{ if .Theme }}theme={{ .Theme }}{{ end }}">1d</a>
         </p>
     </div>
     <div class="card weather" style="min-width: auto;">{{ range .Measures }}
