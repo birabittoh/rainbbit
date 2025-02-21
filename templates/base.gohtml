@@ -57,6 +57,7 @@
       }
       .plot {
         max-width: unset;
+        width: 692px;
         overflow-x: auto;
       }
       @media (max-width: 768px) {
@@ -70,13 +71,13 @@
     {{ template "head" . }}
   </head>
   <body>
-    {{ template "body" . }}
     <p class="text-center">
-        <a href="/?theme={{ .Theme }}">Home</a>,
-        <a href="/plot/pressure?theme={{ .Theme }}">Plots</a>,
-        <a href="/records?theme={{ .Theme }}">Table</a>,
-        <a href="/api/records" target="_blank">API</a>,
-        <a href="?{{ if eq .Theme "" }}theme=light{{ end }}">Theme</a>
+      <a href="/{{ if .Theme }}?theme={{ .Theme }}{{ end }}">Home</a>,
+      <a href="/plot/pressure{{ if .Theme }}?theme={{ .Theme }}{{ end }}">Plots</a>,
+      <a href="/records{{ if .Theme }}?theme={{ .Theme }}{{ end }}">Table</a>,
+      <a href="/api/records" target="_blank">API</a>,
+      <a href="?{{ if not .Theme }}theme=light{{ end }}">Theme</a>
     </p>
+    {{ template "body" . }}
   </body>
 </html>{{ end }}

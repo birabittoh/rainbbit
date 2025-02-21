@@ -100,6 +100,8 @@ func fetchAndSaveWeather(db *gorm.DB, coords *openweathermap.Coordinates) {
 		return
 	}
 
+	zone = current.Name
+
 	recordsCache.Delete("latest")
 	log.Println("Record salvato")
 }
