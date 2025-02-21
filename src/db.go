@@ -7,7 +7,9 @@ import (
 	"slices"
 	"strconv"
 	"sync"
+	"time"
 
+	"github.com/birabittoh/myks"
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -18,6 +20,9 @@ const dataDir = "data"
 var (
 	db       *gorm.DB
 	measures []string
+
+	recordsCache = myks.New[[]Record](30 * time.Minute)
+	dpCache      = myks.New[[]DataPoint](30 * time.Minute)
 )
 
 // ------------------------
@@ -63,7 +68,7 @@ type Record struct {
 	TimeAgo    string      `json:"-" gorm:"-"`
 }
 
-func parseConstraints(from int64, to int64) (f, t *int64) {
+func alignConstraints(from int64, to int64) (f, t *int64) {
 	if from != 0 { // round down to the nearest cron interval
 		alignedFrom := (from / cronInterval) * cronInterval
 		f = &alignedFrom
@@ -86,9 +91,16 @@ func addConstraints(query *gorm.DB, from, to *int64) *gorm.DB {
 }
 
 func getAllRecords(from int64, to int64) (records []Record, err error) {
-	f, t := parseConstraints(from, to)
-	query := addConstraints(db.Model(&Record{}), f, t)
+	f, t := alignConstraints(from, to)
+	key := getKeyMeasures([]string{"*"}, f, t)
 
+	value, err := recordsCache.Get(key)
+	if err == nil {
+		records = *value
+		return
+	}
+
+	query := addConstraints(db.Model(&Record{}), f, t)
 	err = query.Find(&records).Error
 	if err != nil {
 		return
@@ -97,16 +109,27 @@ func getAllRecords(from int64, to int64) (records []Record, err error) {
 	for i := range records {
 		records[i].parseConditions()
 	}
+
+	recordsCache.Set(key, records, 25*time.Minute)
 	return
 }
 
 func getLatestRecord() (record Record, err error) {
+	value, err := recordsCache.Get("latest")
+	if err == nil {
+		record = (*value)[0]
+		println("cache hit")
+		return
+	}
+	println("cache miss")
+
 	err = db.Last(&record).Error
 	if err != nil {
 		return
 	}
 
 	record.parseConditions()
+	recordsCache.Set("latest", []Record{record}, 40*time.Minute)
 	return
 }
 
@@ -123,7 +146,14 @@ func getDataPoints(measures []string, from int64, to int64) (dp []DataPoint, err
 		return
 	}
 
-	f, t := parseConstraints(from, to)
+	f, t := alignConstraints(from, to)
+	key := getKeyMeasures(measures, f, t)
+
+	value, err := dpCache.Get(key)
+	if err == nil {
+		dp = *value
+		return
+	}
 
 	selectText := "dt"
 	for i, measure := range measures {
@@ -138,6 +168,8 @@ func getDataPoints(measures []string, from int64, to int64) (dp []DataPoint, err
 		err = errors.New("errore nella lettura dei dati: " + err.Error())
 		return
 	}
+
+	dpCache.Set(key, dp, 25*time.Minute)
 	return
 }
 

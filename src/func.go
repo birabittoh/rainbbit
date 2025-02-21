@@ -36,6 +36,23 @@ func getCronInterval(cronExpr string) (int64, error) {
 	return int64(nextAfter.Sub(next).Seconds()), nil
 }
 
+func getFromToKey(from, to *int64) (int64, int64) {
+	if from == nil {
+		f := int64(-1)
+		from = &f
+	}
+	if to == nil {
+		t := int64(-1)
+		to = &t
+	}
+	return *from, *to
+}
+
+func getKeyMeasures(m []string, from, to *int64) string {
+	f, t := getFromToKey(from, to)
+	return fmt.Sprintf("%v|%d|%d", m, f, t)
+}
+
 // fetchAndSaveWeather effettua la chiamata all'API, mappa i dati nei modelli e li salva nel database.
 func fetchAndSaveWeather(db *gorm.DB, coords *openweathermap.Coordinates) {
 	// Chiamata all'API usando le coordinate specificate
@@ -80,6 +97,8 @@ func fetchAndSaveWeather(db *gorm.DB, coords *openweathermap.Coordinates) {
 		log.Println("Errore nel salvataggio del record:", err)
 		return
 	}
+
+	recordsCache.Delete("latest")
 	log.Println("Record salvato")
 }
 
