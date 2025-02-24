@@ -31,12 +31,18 @@
     </p>
     <div class="container">
         <div class="card plot">
-            <p>Temperature</p>
+            <p>Temperature (°C)</p>
             <img src="/api/temp?from={{ .From }}&to={{ .To }}&theme={{ .Theme }}" alt="Could not display temp plot.">
         </div>
         <div class="card plot">
-            <p>Humidity</p>
+            <p>Humidity (%)</p>
             <img src="/api/plot/humidity?from={{ .From }}&to={{ .To }}&theme={{ .Theme }}" alt="Could not display humidity plot.">
+        </div>
+    </div>
+    <div class="container">
+        <div class="card plot">
+            <p>Pressure (hPa)</p>
+            <img src="/api/pressure?from={{ .From }}&to={{ .To }}&theme={{ .Theme }}" alt="Could not display pressure plot.">
         </div>
     </div>
 </div>

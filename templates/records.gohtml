@@ -1,5 +1,10 @@
 {{ define "title" }}Table{{ end }}
-{{ define "body" }}<table>
+{{ define "body" }}<p style="text-align: center;">
+    <a href="?{{ if .Theme }}theme={{ .Theme }}&{{ end }}from=0">All</a>,
+    <a href="?{{ if .Theme }}theme={{ .Theme }}&{{ end }}from={{ .OneWeekAgo }}">1w</a>,
+    <a href="?{{ if .Theme }}theme={{ .Theme }}{{ end }}">1d</a>
+</p>
+<table>
     <thead>
         <tr>
             <th>Time</th>
@@ -44,9 +49,4 @@
             <td>{{ .Weather }}</td>
         </tr>
         {{ end }}</tbody>
-</table>
-<p style="text-align: center;">
-    <a href="?{{ if .Theme }}theme={{ .Theme }}&{{ end }}from=0">All</a>,
-    <a href="?{{ if .Theme }}theme={{ .Theme }}&{{ end }}from={{ .OneWeekAgo }}">1w</a>,
-    <a href="?{{ if .Theme }}theme={{ .Theme }}{{ end }}">1d</a>
-</p>{{ end }}
+</table>{{ end }}

@@ -236,3 +236,38 @@ func plotTemperature(f, t *int64, palette *bh.Palette) (p *plot.Plot, err error)
 
 	return
 }
+
+func plotPressure(f, t *int64, palette *bh.Palette) (p *plot.Plot, err error) {
+	dp, err := getDataPoints([]string{"sea_level", "grnd_level"}, f, t)
+	if err != nil {
+		err = errors.New("errore nella lettura dei dati: " + err.Error())
+		return
+	}
+
+	var timestamps []time.Time
+	slPts := make(plotter.XYs, len(dp))
+	grPts := make(plotter.XYs, len(dp))
+	for i := range dp {
+
+		slPts[i].X = dp[i].Dt
+		slPts[i].Y = dp[i].Value0
+
+		grPts[i].X = dp[i].Dt
+		grPts[i].Y = dp[i].Value1
+
+		timestamps = append(timestamps, time.Unix(int64(dp[i].Dt), 0).Round(time.Minute))
+	}
+
+	p = newPlot(timestamps, palette)
+
+	err = addLines(p, slPts, palette.Blue, false, "Sea Level")
+	if err != nil {
+		return
+	}
+	err = addLines(p, grPts, palette.Brown, false, "Ground Level")
+	if err != nil {
+		return
+	}
+
+	return
+}

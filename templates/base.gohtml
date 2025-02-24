@@ -30,6 +30,7 @@
         justify-content: center;
         align-items: center;
         gap: 20px;
+        margin-bottom: 20px;
         flex-wrap: wrap;
       }
       .text-center {
@@ -77,9 +78,14 @@
       <a href="/{{ if .Theme }}?theme={{ .Theme }}{{ end }}">Home</a>,
       <a href="/plot/pressure{{ if .Theme }}?theme={{ .Theme }}{{ end }}">Plots</a>,
       <a href="/records{{ if .Theme }}?theme={{ .Theme }}{{ end }}">Table</a>,
-      <a href="/api/records" target="_blank">API</a>,
       <a href="?{{ if not .Theme }}theme=light{{ end }}">Theme</a>
     </p>
     {{ template "body" . }}
+    <footer>
+      <p class="text-center">
+        <a href="https://github.com/birabittoh/rainbbit" target="_blank">Code</a>,
+        <a href="/api/records" target="_blank">API</a>
+      </p>
+    </footer>
   </body>
 </html>{{ end }}

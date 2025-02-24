@@ -214,6 +214,33 @@ func getAPITemp(w http.ResponseWriter, r *http.Request) {
 	writePlot(w, b)
 }
 
+func getAPIPressure(w http.ResponseWriter, r *http.Request) {
+	from, to, palette := getLimits(r)
+
+	f, t := alignConstraints(from, to)
+	key := getKey([]string{"p", palette.Name}, f, t)
+	value, err := plotCache.Get(key)
+	if err == nil {
+		writePlot(w, *value)
+		return
+	}
+
+	p, err := plotPressure(f, t, palette)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	b, err := getPlotSVG(p, plotWidth, plotHeight)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	plotCache.Set(key, b, 25*time.Minute)
+	writePlot(w, b)
+}
+
 func getIndex(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	palette := getPalette(q)
@@ -287,6 +314,7 @@ func getServeMux() *http.ServeMux {
 	s.HandleFunc("GET /api/meta", getAPIMeta)
 	s.HandleFunc("GET /api/plot/{measure}", getAPIPlot)
 	s.HandleFunc("GET /api/temp", getAPITemp)
+	s.HandleFunc("GET /api/pressure", getAPIPressure)
 
 	s.HandleFunc("GET /", getIndex)
 	s.HandleFunc("GET /records", getRecords)
