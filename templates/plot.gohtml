@@ -1,6 +1,6 @@
 {{ define "title" }}{{ capitalize .Measure }}{{ end }}
 {{ define "body" }}<div class="container">
-    <div class="card weather text-center" style="max-width: 100%;">
+    <div class="card weather" style="max-width: 100%;">
         <p><strong>{{ .Measure }}</strong></p>
         <img src="/api/plot/{{ .Measure }}?theme={{ .Theme }}&from={{ .From }}&to={{ .To }}" alt="Could not display plot." style="max-width: 100%;"><br />
         <p>

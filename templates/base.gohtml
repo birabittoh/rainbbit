@@ -63,6 +63,11 @@
         width: 692px;
         overflow-x: auto;
       }
+      .plot p {
+        position: sticky;
+        left: 0;
+        right: 0;
+      }
       @media (max-width: 768px) {
         .weather {
           max-width: 100%;
@@ -75,15 +80,17 @@
   </head>
   <body>
     <p class="text-center">
+      <!--
       <a href="/{{ if .Theme }}?theme={{ .Theme }}{{ end }}">Home</a>,
       <a href="/plot/pressure{{ if .Theme }}?theme={{ .Theme }}{{ end }}">Plots</a>,
       <a href="/records{{ if .Theme }}?theme={{ .Theme }}{{ end }}">Table</a>,
+      -->
       <a href="?{{ if not .Theme }}theme=light{{ end }}">Theme</a>
     </p>
     {{ template "body" . }}
     <footer>
       <p class="text-center">
-        <a href="https://github.com/birabittoh/rainbbit" target="_blank">Code</a>,
+        <a href="//github.com/birabittoh/rainbbit" target="_blank">Code</a>,
         <a href="/api/records" target="_blank">API</a>
       </p>
     </footer>
