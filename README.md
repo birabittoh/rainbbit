@@ -34,8 +34,10 @@ Provides the zone name, lists plottable measures and available themes.
 Generates an SVG plot for any measure.
 
 ### GET /api/temp
-Generates a custom SVG plot for temperatures.
+Generates a custom SVG plot for temperature.
 
+### GET /api/pressure
+Generates a custom SVG plot for pressure.
 ## Instructions
 First of all, create your own `.env` file:
 ```sh
