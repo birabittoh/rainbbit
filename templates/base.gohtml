@@ -17,10 +17,12 @@
         border-radius: 10px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         min-width: 220px;
+        min-height: 288px;
+        max-width: 45%;
         flex-grow: 0;
         flex-basis: auto;
         flex-shrink: 1;
-        max-width: 45%;
+        align-content: center;
       }
       .weather p {
         margin: 10px 0;
@@ -61,6 +63,7 @@
       .plot {
         max-width: unset;
         width: 692px;
+        height: 438.4px;
         overflow-x: auto;
       }
       .plot p {
@@ -90,7 +93,7 @@
     {{ template "body" . }}
     <footer>
       <p class="text-center">
-        <a href="//github.com/birabittoh/rainbbit" target="_blank">Code</a>,
+        <a href="//github.com/birabittoh/rainbbit" target="_blank">Source</a>,
         <a href="/api/records" target="_blank">API</a>
       </p>
     </footer>
