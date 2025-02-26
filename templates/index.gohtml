@@ -12,12 +12,12 @@
     </div>
     <div class="card weather">
         <p><strong>Humidity:</strong> {{ .Latest.Humidity }}%</p>
+        <p><strong>Feels Like:</strong> {{ .Latest.FeelsLike }}°C</p>
         <p><strong>Temperature:</strong> {{ .Latest.Temp }}°C</p>
         <p><strong>Min:</strong> {{ .Latest.TempMin }}°C</p>
         <p><strong>Max:</strong> {{ .Latest.TempMax }}°C</p>
-        <p><strong>Feels Like:</strong> {{ .Latest.FeelsLike }}°C</p>
         <hr style="max-width: 180px;">
-        <p><strong>Wind Speed:</strong> {{ .Latest.WindSpeed }}m/s</p>
+        <p><strong>Wind:</strong> {{ getWindDirection .Latest.WindDeg }} {{ .Latest.WindSpeed }}m/s</p>
         <p><strong>Clouds:</strong> {{ .Latest.Clouds }}%</p>
         <p><strong>Rain:</strong> {{ .Latest.Rain1H }}mm/h</p>
         <p><strong>Snow:</strong> {{ .Latest.Snow1H }}mm/h</p>

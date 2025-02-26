@@ -14,7 +14,10 @@ import (
 	"gorm.io/gorm"
 )
 
-var current *openweathermap.CurrentWeatherData
+var (
+	directions = []string{"↑", "↗", "→", "↘", "↓", "↙", "←", "↖"}
+	current    *openweathermap.CurrentWeatherData
+)
 
 // ------------------------
 // FUNZIONI DI SUPPORTO
@@ -134,6 +137,14 @@ func getTitle(r Record) string {
 		return ""
 	}
 	return capitalize(r.Conditions[0].Description)
+}
+
+func getWindDirection(deg float64) string {
+	if deg < 0 {
+		return ""
+	}
+
+	return directions[int((deg+22.5)/45)%8]
 }
 
 func getEnvDefault(key, def string) string {

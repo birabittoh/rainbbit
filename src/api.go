@@ -29,11 +29,12 @@ const (
 var (
 	tmpl    map[string]*template.Template
 	funcMap = template.FuncMap{
-		"capitalize":      capitalize,
-		"getHex":          getHex,
-		"formatTimestamp": formatTimestamp,
-		"getFavicon":      getFavicon,
-		"getTitle":        getTitle,
+		"capitalize":       capitalize,
+		"getHex":           getHex,
+		"formatTimestamp":  formatTimestamp,
+		"getFavicon":       getFavicon,
+		"getTitle":         getTitle,
+		"getWindDirection": getWindDirection,
 	}
 
 	palettes = map[string]*bh.Palette{
