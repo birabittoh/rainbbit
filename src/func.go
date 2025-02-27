@@ -105,6 +105,14 @@ func fetchAndSaveWeather(db *gorm.DB, coords *openweathermap.Coordinates) {
 	}
 
 	zone = current.Name
+	if _, err := os.Stat(zonePath); os.IsNotExist(err) {
+		err = os.WriteFile(zonePath, []byte(zone), 0644)
+		if err != nil {
+			log.Println("Errore nella creazione del file:", err)
+			return
+		}
+		log.Println("File " + zonePath + " creato con successo")
+	}
 
 	recordsCache.Delete("latest")
 	log.Println("Record salvato")

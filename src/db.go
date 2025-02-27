@@ -3,7 +3,6 @@ package src
 import (
 	"errors"
 	"os"
-	"path/filepath"
 	"slices"
 	"strconv"
 	"sync"
@@ -15,7 +14,12 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-const dataDir = "data"
+const (
+	dataDir   = "data"
+	dbPath    = dataDir + string(os.PathSeparator) + "data.sqlite"
+	dbOptions = "?_pragma=foreign_keys(1)"
+	zonePath  = dataDir + string(os.PathSeparator) + "zone.txt"
+)
 
 var (
 	db       *gorm.DB
@@ -171,8 +175,7 @@ func initDB() (err error) {
 	}
 
 	// Inizializzazione del database SQLite con GORM
-	dbPath := filepath.Join(dataDir, "data.sqlite?_pragma=foreign_keys(1)")
-	db, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	db, err = gorm.Open(sqlite.Open(dbPath+dbOptions), &gorm.Config{})
 	if err != nil {
 		return errors.New("Errore nell'apertura del database: " + err.Error())
 	}
@@ -192,6 +195,12 @@ func initDB() (err error) {
 			continue
 		}
 		measures = append(measures, field.DBName)
+	}
+
+	// Inizializzazione della zona
+	zoneBytes, zErr := os.ReadFile(zonePath)
+	if zErr == nil {
+		zone = string(zoneBytes)
 	}
 
 	return
