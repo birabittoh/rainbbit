@@ -15,8 +15,9 @@ import (
 )
 
 var (
-	directions = []string{"↑", "↗", "→", "↘", "↓", "↙", "←", "↖"}
-	current    *openweathermap.CurrentWeatherData
+	directions  = []string{"↑", "↗", "→", "↘", "↓", "↙", "←", "↖"}
+	percentages = []string{"○", "◔", "◑", "◕", "●"}
+	current     *openweathermap.CurrentWeatherData
 )
 
 // ------------------------
@@ -145,6 +146,11 @@ func getWindDirection(deg float64) string {
 	}
 
 	return directions[int((deg+22.5)/45)%8]
+}
+
+func formatPercent(v int) string {
+	symbol := percentages[(v*len(percentages)-1)/100]
+	return symbol + " " + strconv.Itoa(v) + "%"
 }
 
 func getEnvDefault(key, def string) string {

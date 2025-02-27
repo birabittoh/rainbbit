@@ -32,6 +32,7 @@ var (
 		"capitalize":       capitalize,
 		"getHex":           getHex,
 		"formatTimestamp":  formatTimestamp,
+		"formatPercent":    formatPercent,
 		"getFavicon":       getFavicon,
 		"getTitle":         getTitle,
 		"getWindDirection": getWindDirection,
