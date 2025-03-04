@@ -1,6 +1,6 @@
 module github.com/birabittoh/rainbbit
 
-go 1.23.6
+go 1.24
 
 require (
 	github.com/birabittoh/bunnyhue v1.0.1
