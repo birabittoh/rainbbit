@@ -26,6 +26,8 @@
 <div class="text-center">
     <p>
         <a href="?{{ if .Theme }}theme={{ .Theme }}&{{ end }}from=0">All</a>,
+        <a href="?{{ if .Theme }}theme={{ .Theme }}&{{ end }}from={{ .OneYearAgo }}">1y</a>,
+        <a href="?{{ if .Theme }}theme={{ .Theme }}&{{ end }}from={{ .OneMonthAgo }}">1m</a>,
         <a href="?{{ if .Theme }}theme={{ .Theme }}&{{ end }}from={{ .OneWeekAgo }}">1w</a>,
         <a href="?{{ if .Theme }}theme={{ .Theme }}{{ end }}">1d</a>
     </p>

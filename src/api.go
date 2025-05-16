@@ -23,7 +23,9 @@ const (
 	recordsPath = "templates" + ps + "records.gohtml"
 	plotPath    = "templates" + ps + "plot.gohtml"
 
-	week = 24 * 7 * time.Hour
+	week  = 24 * 7 * time.Hour
+	month = 24 * 30 * time.Hour
+	year  = 24 * 365 * time.Hour
 )
 
 var (
@@ -46,17 +48,19 @@ var (
 )
 
 type PageData struct {
-	Zone       string
-	Palette    *bh.Palette
-	FontFamily string
-	OneWeekAgo int64
-	Theme      string
-	From       string
-	To         string
-	Measure    string
-	Measures   []string
-	Records    []Record
-	Latest     Record
+	Zone        string
+	Palette     *bh.Palette
+	FontFamily  string
+	OneWeekAgo  int64
+	OneMonthAgo int64
+	OneYearAgo  int64
+	Theme       string
+	From        string
+	To          string
+	Measure     string
+	Measures    []string
+	Records     []Record
+	Latest      Record
 }
 
 func respond(w http.ResponseWriter, data interface{}) {
@@ -102,15 +106,19 @@ func getPageData(q url.Values, p *bh.Palette) (*PageData, error) {
 		return nil, err
 	}
 
+	now := time.Now()
+
 	return &PageData{
-		Zone:       zone,
-		Palette:    p,
-		FontFamily: fontFamily,
-		OneWeekAgo: time.Now().Add(-week).Unix(),
-		Theme:      q.Get("theme"),
-		From:       q.Get("from"),
-		To:         q.Get("to"),
-		Latest:     latest,
+		Zone:        zone,
+		Palette:     p,
+		FontFamily:  fontFamily,
+		OneWeekAgo:  now.Add(-week).Unix(),
+		OneMonthAgo: now.Add(-month).Unix(),
+		OneYearAgo:  now.Add(-year).Unix(),
+		Theme:       q.Get("theme"),
+		From:        q.Get("from"),
+		To:          q.Get("to"),
+		Latest:      latest,
 	}, nil
 }
 

@@ -5,6 +5,8 @@
         <img src="/api/plot/{{ .Measure }}?theme={{ .Theme }}&from={{ .From }}&to={{ .To }}" alt="Could not display plot." style="max-width: 100%;"><br />
         <p>
             <a href="?{{ if .Theme }}theme={{ .Theme }}&{{ end }}from=0">All</a>,
+            <a href="?{{ if .Theme }}theme={{ .Theme }}&{{ end }}from={{ .OneYearAgo }}">1y</a>,
+            <a href="?{{ if .Theme }}theme={{ .Theme }}&{{ end }}from={{ .OneMonthAgo }}">1m</a>,
             <a href="?{{ if .Theme }}theme={{ .Theme }}&{{ end }}from={{ .OneWeekAgo }}">1w</a>,
             <a href="?{{ if .Theme }}theme={{ .Theme }}{{ end }}">1d</a>
         </p>
