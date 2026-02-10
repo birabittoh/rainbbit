@@ -14,7 +14,7 @@ import (
 	"gonum.org/v1/plot/vg"
 
 	bh "github.com/birabittoh/bunnyhue"
-	"github.com/birabittoh/myks"
+	"github.com/hashicorp/golang-lru/v2/expirable"
 )
 
 const (
@@ -31,7 +31,7 @@ var (
 		Size:     10,
 	}
 
-	plotCache = myks.New[[]byte](32 * time.Minute)
+	plotCache = expirable.NewLRU[string, []byte](1024, nil, 30*time.Minute)
 )
 
 type DataPoint struct {
