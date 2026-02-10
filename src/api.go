@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	bh "github.com/birabittoh/bunnyhue"
@@ -30,6 +31,7 @@ const (
 
 var (
 	tmpl    map[string]*template.Template
+	tmplOnce sync.Once
 	funcMap = template.FuncMap{
 		"capitalize":       capitalize,
 		"getHex":           getHex,
@@ -44,7 +46,8 @@ var (
 		"":      &bh.Dark, // default
 		"light": &bh.Light,
 	}
-	themes []string
+	themes     []string
+	themesOnce sync.Once
 )
 
 type PageData struct {
@@ -108,8 +111,12 @@ func getPageData(q url.Values, p *bh.Palette) (*PageData, error) {
 
 	now := time.Now()
 
+	funcMu.RLock()
+	z := zone
+	funcMu.RUnlock()
+
 	return &PageData{
-		Zone:        zone,
+		Zone:        z,
 		Palette:     p,
 		FontFamily:  fontFamily,
 		OneWeekAgo:  now.Add(-week).Unix(),
@@ -157,9 +164,18 @@ func getAPILatest(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAPIMeta(w http.ResponseWriter, r *http.Request) {
+	funcMu.RLock()
+	z := zone
+	funcMu.RUnlock()
+
+	dbMu.RLock()
+	m := make([]string, len(measures))
+	copy(m, measures)
+	dbMu.RUnlock()
+
 	respond(w, map[string]any{
-		"zone":     zone,
-		"measures": measures,
+		"zone":     z,
+		"measures": m,
 		"themes":   themes,
 	})
 }
@@ -286,7 +302,13 @@ func getPlot(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	pd.Measures = measures
+
+	dbMu.RLock()
+	m := make([]string, len(measures))
+	copy(m, measures)
+	dbMu.RUnlock()
+
+	pd.Measures = m
 	pd.Measure = r.PathValue("measure")
 
 	executeTemplateSafe(w, plotPath, pd)
@@ -298,15 +320,19 @@ func parseTemplate(path string) *template.Template {
 
 func getServeMux() *http.ServeMux {
 	// init templates
-	tmpl = make(map[string]*template.Template)
+	tmplOnce.Do(func() {
+		tmpl = make(map[string]*template.Template)
 
-	tmpl[indexPath] = parseTemplate(indexPath)
-	tmpl[recordsPath] = parseTemplate(recordsPath)
-	tmpl[plotPath] = parseTemplate(plotPath)
+		tmpl[indexPath] = parseTemplate(indexPath)
+		tmpl[recordsPath] = parseTemplate(recordsPath)
+		tmpl[plotPath] = parseTemplate(plotPath)
+	})
 
-	for k := range palettes {
-		themes = append(themes, k)
-	}
+	themesOnce.Do(func() {
+		for k := range palettes {
+			themes = append(themes, k)
+		}
+	})
 
 	// init conditions
 	var err error

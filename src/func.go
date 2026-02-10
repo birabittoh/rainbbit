@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/briandowns/openweathermap"
@@ -18,6 +19,7 @@ var (
 	directions  = []string{"↑", "↗", "→", "↘", "↓", "↙", "←", "↖"}
 	percentages = []string{"○", "◔", "◑", "◕", "●"}
 	current     *openweathermap.CurrentWeatherData
+	funcMu      sync.RWMutex
 )
 
 // ------------------------
@@ -61,6 +63,9 @@ func getKey(m []string, from, to *int64) string {
 
 // fetchAndSaveWeather effettua la chiamata all'API, mappa i dati nei modelli e li salva nel database.
 func fetchAndSaveWeather(db *gorm.DB, coords *openweathermap.Coordinates) {
+	funcMu.Lock()
+	defer funcMu.Unlock()
+
 	// Chiamata all'API usando le coordinate specificate
 	err := current.CurrentByCoordinates(coords)
 	if err != nil {
@@ -105,6 +110,10 @@ func fetchAndSaveWeather(db *gorm.DB, coords *openweathermap.Coordinates) {
 	}
 
 	zone = current.Name
+	dbMu.Lock()
+	recordsCache.Delete("latest")
+	dbMu.Unlock()
+
 	if _, err := os.Stat(zonePath); os.IsNotExist(err) {
 		err = os.WriteFile(zonePath, []byte(zone), 0644)
 		if err != nil {
@@ -114,7 +123,6 @@ func fetchAndSaveWeather(db *gorm.DB, coords *openweathermap.Coordinates) {
 		log.Println("File " + zonePath + " creato con successo")
 	}
 
-	recordsCache.Delete("latest")
 	log.Println("Record salvato")
 }
 

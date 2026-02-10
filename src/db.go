@@ -24,6 +24,7 @@ const (
 var (
 	db       *gorm.DB
 	measures []string
+	dbMu     sync.RWMutex
 
 	recordsCache = myks.New[[]Record](30 * time.Minute)
 	dpCache      = myks.New[[]DataPoint](31 * time.Minute)
@@ -129,20 +130,23 @@ func getLatestRecord() (record Record, err error) {
 	return
 }
 
-func getDataPoints(measures []string, f, t *int64) (dp []DataPoint, err error) {
-	for _, measure := range measures {
+func getDataPoints(requestedMeasures []string, f, t *int64) (dp []DataPoint, err error) {
+	dbMu.RLock()
+	for _, measure := range requestedMeasures {
 		if !slices.Contains(measures, measure) {
-			err = errors.New("la misura richiesta non esiste")
+			dbMu.RUnlock()
+			err = errors.New("la misura richiesta non esiste: " + measure)
 			return
 		}
 	}
+	dbMu.RUnlock()
 
-	if len(measures) > 5 {
-		err = errors.New("sono supportate al massimo 3 misure")
+	if len(requestedMeasures) > 5 {
+		err = errors.New("sono supportate al massimo 5 misure")
 		return
 	}
 
-	key := getKey(measures, f, t)
+	key := getKey(requestedMeasures, f, t)
 
 	value, err := dpCache.Get(key)
 	if err == nil {
@@ -151,7 +155,7 @@ func getDataPoints(measures []string, f, t *int64) (dp []DataPoint, err error) {
 	}
 
 	selectText := "dt"
-	for i, measure := range measures {
+	for i, measure := range requestedMeasures {
 		selectText += ", " + measure + " as value" + strconv.Itoa(i)
 	}
 
@@ -185,22 +189,33 @@ func initDB() (err error) {
 		return errors.New("Errore nella migrazione del database: " + err.Error())
 	}
 
+	// Limitazione delle connessioni per SQLite
+	sqlDB, err := db.DB()
+	if err == nil {
+		sqlDB.SetMaxOpenConns(1)
+	}
+
 	// Inizializzazione delle colonne
 	s, err := schema.Parse(&Record{}, &sync.Map{}, schema.NamingStrategy{})
 	if err != nil {
 		return errors.New("Errore nel parsing dello schema: " + err.Error())
 	}
+	dbMu.Lock()
+	measures = nil // Reset in case initDB is called multiple times
 	for _, field := range s.Fields {
 		if field.DBName == "" || field.DBName == "weather" || field.DBName == "dt" {
 			continue
 		}
 		measures = append(measures, field.DBName)
 	}
+	dbMu.Unlock()
 
 	// Inizializzazione della zona
 	zoneBytes, zErr := os.ReadFile(zonePath)
 	if zErr == nil {
+		funcMu.Lock()
 		zone = string(zoneBytes)
+		funcMu.Unlock()
 	}
 
 	return
