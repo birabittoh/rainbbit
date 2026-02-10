@@ -5,10 +5,16 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
-var conditions map[string]Condition
+var (
+	conditions map[string]Condition
+	condOnce   sync.Once
+	condMu     sync.RWMutex
+	condErr    error
+)
 
 type Condition struct {
 	Name        string `json:"name"`
@@ -17,18 +23,22 @@ type Condition struct {
 }
 
 func loadConditions() (map[string]Condition, error) {
-	file, err := os.Open("conditions.json")
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
+	condOnce.Do(func() {
+		file, err := os.Open("conditions.json")
+		if err != nil {
+			condErr = err
+			return
+		}
+		defer file.Close()
 
-	err = json.NewDecoder(file).Decode(&conditions)
-	if err != nil {
-		return nil, err
-	}
+		condMu.Lock()
+		condErr = json.NewDecoder(file).Decode(&conditions)
+		condMu.Unlock()
+	})
 
-	return conditions, nil
+	condMu.RLock()
+	defer condMu.RUnlock()
+	return conditions, condErr
 }
 
 func (record *Record) parseConditions() {
@@ -38,6 +48,8 @@ func (record *Record) parseConditions() {
 
 	weatherIDs := strings.Split(record.Weather, ",")
 
+	condMu.RLock()
+	defer condMu.RUnlock()
 	for _, w := range weatherIDs {
 		c, ok := conditions[w]
 		if !ok {
