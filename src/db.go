@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/birabittoh/myks"
 	"github.com/glebarez/sqlite"
+	"github.com/hashicorp/golang-lru/v2/expirable"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
@@ -26,8 +26,8 @@ var (
 	measures []string
 	dbMu     sync.RWMutex
 
-	recordsCache = myks.New[[]Record](30 * time.Minute)
-	dpCache      = myks.New[[]DataPoint](31 * time.Minute)
+	recordsCache = expirable.NewLRU[string, []Record](1024, nil, 30*time.Minute)
+	dpCache      = expirable.NewLRU[string, []DataPoint](1024, nil, 30*time.Minute)
 )
 
 // ------------------------
@@ -93,9 +93,9 @@ func getAllRecords(from int64, to int64) (records []Record, err error) {
 	f, t := alignConstraints(from, to)
 	key := getKey([]string{"*"}, f, t)
 
-	value, err := recordsCache.Get(key)
-	if err == nil {
-		records = *value
+	value, ok := recordsCache.Get(key)
+	if ok {
+		records = value
 		return
 	}
 
@@ -109,14 +109,14 @@ func getAllRecords(from int64, to int64) (records []Record, err error) {
 		records[i].parseConditions()
 	}
 
-	recordsCache.Set(key, records, 25*time.Minute)
+	recordsCache.Add(key, records)
 	return
 }
 
 func getLatestRecord() (record Record, err error) {
-	value, err := recordsCache.Get("latest")
-	if err == nil {
-		record = (*value)[0]
+	value, ok := recordsCache.Get("latest")
+	if ok {
+		record = value[0]
 		return
 	}
 
@@ -126,7 +126,7 @@ func getLatestRecord() (record Record, err error) {
 	}
 
 	record.parseConditions()
-	recordsCache.Set("latest", []Record{record}, 40*time.Minute)
+	recordsCache.Add("latest", []Record{record})
 	return
 }
 
@@ -148,9 +148,9 @@ func getDataPoints(requestedMeasures []string, f, t *int64) (dp []DataPoint, err
 
 	key := getKey(requestedMeasures, f, t)
 
-	value, err := dpCache.Get(key)
-	if err == nil {
-		dp = *value
+	value, ok := dpCache.Get(key)
+	if ok {
+		dp = value
 		return
 	}
 
@@ -168,7 +168,7 @@ func getDataPoints(requestedMeasures []string, f, t *int64) (dp []DataPoint, err
 		return
 	}
 
-	dpCache.Set(key, dp, 25*time.Minute)
+	dpCache.Add(key, dp)
 	return
 }
 

@@ -19,8 +19,6 @@ github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b h1:slYM766cy2nI3BwyR
 github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b/go.mod h1:1KcenG0jGWcpt8ov532z81sp/kMMUG485J2InIOyADM=
 github.com/birabittoh/bunnyhue v1.0.1 h1:jJFb+/D/jaoWbYykl25jQMDRfXz7j92dCPVGE8dlKzo=
 github.com/birabittoh/bunnyhue v1.0.1/go.mod h1:zxgZVq7Kb++vQZIiJSge4KdQcUpzQyk39GsB8SjoahA=
-github.com/birabittoh/myks v0.0.2 h1:EBukMUsAflwiqdNo4LE7o2WQdEvawty5ewCZWY+IXSU=
-github.com/birabittoh/myks v0.0.2/go.mod h1:klNWaeUWm7TmhnBHBMt9vALwCHW11/Xw1BpCNkCx7hs=
 github.com/briandowns/openweathermap v0.21.1 h1:TPbuixuF+aGJP1mpgTNny6eUkdbvj7gqODGXkwhss48=
 github.com/briandowns/openweathermap v0.21.1/go.mod h1:0GLnknqicWxXnGi1IqoOaZIw+kIe5hkt+YM5WY3j8+0=
 github.com/campoy/embedmd v1.0.0 h1:V4kI2qTJJLf4J29RzI/MAt2c3Bl4dQSYPuflzwFH2hY=

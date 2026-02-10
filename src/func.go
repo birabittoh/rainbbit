@@ -111,7 +111,8 @@ func fetchAndSaveWeather(db *gorm.DB, coords *openweathermap.Coordinates) {
 
 	zone = current.Name
 	dbMu.Lock()
-	recordsCache.Delete("latest")
+	recordsCache.Remove("latest")
+	apiResponseCache.Purge()
 	dbMu.Unlock()
 
 	if _, err := os.Stat(zonePath); os.IsNotExist(err) {

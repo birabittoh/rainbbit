@@ -13,6 +13,7 @@ import (
 	"time"
 
 	bh "github.com/birabittoh/bunnyhue"
+	"github.com/hashicorp/golang-lru/v2/expirable"
 )
 
 const (
@@ -46,8 +47,9 @@ var (
 		"":      &bh.Dark, // default
 		"light": &bh.Light,
 	}
-	themes     []string
-	themesOnce sync.Once
+	themes           []string
+	themesOnce       sync.Once
+	apiResponseCache = expirable.NewLRU[string, []byte](1024, nil, 10*time.Minute)
 )
 
 type PageData struct {
@@ -139,6 +141,13 @@ func executeTemplateSafe(w http.ResponseWriter, t string, data any) {
 }
 
 func getAPIRecords(w http.ResponseWriter, r *http.Request) {
+	key := r.URL.String()
+	if val, ok := apiResponseCache.Get(key); ok {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(val)
+		return
+	}
+
 	from, to, _ := getLimits(r)
 	records, err := getAllRecords(from, to)
 	if err != nil {
@@ -146,24 +155,69 @@ func getAPIRecords(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respond(w, records)
+	b, err := json.Marshal(records)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	apiResponseCache.Add(key, b)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(b)
 }
 
 func getAPIConditions(w http.ResponseWriter, r *http.Request) {
-	respond(w, conditions)
+	key := r.URL.String()
+	if val, ok := apiResponseCache.Get(key); ok {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(val)
+		return
+	}
+
+	b, err := json.Marshal(conditions)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	apiResponseCache.Add(key, b)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(b)
 }
 
 func getAPILatest(w http.ResponseWriter, r *http.Request) {
+	key := r.URL.String()
+	if val, ok := apiResponseCache.Get(key); ok {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(val)
+		return
+	}
+
 	latest, err := getLatestRecord()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	respond(w, latest)
+	b, err := json.Marshal(latest)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	apiResponseCache.Add(key, b)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(b)
 }
 
 func getAPIMeta(w http.ResponseWriter, r *http.Request) {
+	key := r.URL.String()
+	if val, ok := apiResponseCache.Get(key); ok {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(val)
+		return
+	}
+
 	funcMu.RLock()
 	z := zone
 	funcMu.RUnlock()
@@ -173,14 +227,31 @@ func getAPIMeta(w http.ResponseWriter, r *http.Request) {
 	copy(m, measures)
 	dbMu.RUnlock()
 
-	respond(w, map[string]any{
+	data := map[string]any{
 		"zone":     z,
 		"measures": m,
 		"themes":   themes,
-	})
+	}
+
+	b, err := json.Marshal(data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	apiResponseCache.Add(key, b)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(b)
 }
 
 func getAPIPlot(w http.ResponseWriter, r *http.Request) {
+	key := r.URL.String()
+	if val, ok := apiResponseCache.Get(key); ok {
+		w.Header().Set("Content-Type", "image/svg+xml")
+		w.Write(val)
+		return
+	}
+
 	from, to, palette := getLimits(r)
 	measure := r.PathValue("measure")
 	if measure == "" {
@@ -189,11 +260,12 @@ func getAPIPlot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	f, t := alignConstraints(from, to)
-	key := getKey([]string{measure, palette.Name}, f, t)
+	cacheKey := getKey([]string{measure, palette.Name}, f, t)
 
-	value, err := plotCache.Get(key)
-	if err == nil {
-		writePlot(w, *value)
+	value, ok := plotCache.Get(cacheKey)
+	if ok {
+		apiResponseCache.Add(key, value)
+		writePlot(w, value)
 		return
 	}
 
@@ -209,18 +281,27 @@ func getAPIPlot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	plotCache.Set(key, b, 25*time.Minute)
+	plotCache.Add(cacheKey, b)
+	apiResponseCache.Add(key, b)
 	writePlot(w, b)
 }
 
 func getAPITemp(w http.ResponseWriter, r *http.Request) {
+	key := r.URL.String()
+	if val, ok := apiResponseCache.Get(key); ok {
+		w.Header().Set("Content-Type", "image/svg+xml")
+		w.Write(val)
+		return
+	}
+
 	from, to, palette := getLimits(r)
 
 	f, t := alignConstraints(from, to)
-	key := getKey([]string{"t", palette.Name}, f, t)
-	value, err := plotCache.Get(key)
-	if err == nil {
-		writePlot(w, *value)
+	cacheKey := getKey([]string{"t", palette.Name}, f, t)
+	value, ok := plotCache.Get(cacheKey)
+	if ok {
+		apiResponseCache.Add(key, value)
+		writePlot(w, value)
 		return
 	}
 
@@ -236,18 +317,27 @@ func getAPITemp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	plotCache.Set(key, b, 25*time.Minute)
+	plotCache.Add(cacheKey, b)
+	apiResponseCache.Add(key, b)
 	writePlot(w, b)
 }
 
 func getAPIPressure(w http.ResponseWriter, r *http.Request) {
+	key := r.URL.String()
+	if val, ok := apiResponseCache.Get(key); ok {
+		w.Header().Set("Content-Type", "image/svg+xml")
+		w.Write(val)
+		return
+	}
+
 	from, to, palette := getLimits(r)
 
 	f, t := alignConstraints(from, to)
-	key := getKey([]string{"p", palette.Name}, f, t)
-	value, err := plotCache.Get(key)
-	if err == nil {
-		writePlot(w, *value)
+	cacheKey := getKey([]string{"p", palette.Name}, f, t)
+	value, ok := plotCache.Get(cacheKey)
+	if ok {
+		apiResponseCache.Add(key, value)
+		writePlot(w, value)
 		return
 	}
 
@@ -263,7 +353,8 @@ func getAPIPressure(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	plotCache.Set(key, b, 25*time.Minute)
+	plotCache.Add(cacheKey, b)
+	apiResponseCache.Add(key, b)
 	writePlot(w, b)
 }
 
