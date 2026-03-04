@@ -61,6 +61,17 @@ docker compose up -d
 -------------|----------------
 `OWM_CRON`   |`0 0/30 * * * *`
 `APP_ADDRESS`|`:3000`
+`DATABASE_URL`| (If set, PostgreSQL is used instead of SQLite)
+
+## Migration to PostgreSQL
+If you want to migrate your existing SQLite data to PostgreSQL:
+
+1. Set `DATABASE_URL` in your `.env` file.
+2. (Optional) Set `SQLITE_PATH` if your database is not in `data/data.sqlite`.
+3. Run the migration script:
+```sh
+go run ./cmd/migrate
+```
 
 ## License
 Rainbbit is licensed under MIT.

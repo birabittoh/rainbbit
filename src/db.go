@@ -10,6 +10,7 @@ import (
 
 	"github.com/glebarez/sqlite"
 	"github.com/hashicorp/golang-lru/v2/expirable"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
@@ -17,7 +18,7 @@ import (
 const (
 	dataDir   = "data"
 	dbPath    = dataDir + string(os.PathSeparator) + "data.sqlite"
-	dbOptions = "?_pragma=foreign_keys(1)"
+	dbOptions = "?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)&_pragma=synchronous(NORMAL)"
 	zonePath  = dataDir + string(os.PathSeparator) + "zone.txt"
 )
 
@@ -173,26 +174,34 @@ func getDataPoints(requestedMeasures []string, f, t *int64) (dp []DataPoint, err
 }
 
 func initDB() (err error) {
-	// Assicuriamoci che la directory "data" esista
-	if err := os.MkdirAll(dataDir, os.ModePerm); err != nil {
-		return errors.New("Errore nella creazione della directory 'data': " + err.Error())
-	}
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn != "" {
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err != nil {
+			return errors.New("Errore nell'apertura del database PostgreSQL: " + err.Error())
+		}
+	} else {
+		// Assicuriamoci che la directory "data" esista
+		if err := os.MkdirAll(dataDir, os.ModePerm); err != nil {
+			return errors.New("Errore nella creazione della directory 'data': " + err.Error())
+		}
 
-	// Inizializzazione del database SQLite con GORM
-	db, err = gorm.Open(sqlite.Open(dbPath+dbOptions), &gorm.Config{})
-	if err != nil {
-		return errors.New("Errore nell'apertura del database: " + err.Error())
+		// Inizializzazione del database SQLite con GORM
+		db, err = gorm.Open(sqlite.Open(dbPath+dbOptions), &gorm.Config{})
+		if err != nil {
+			return errors.New("Errore nell'apertura del database SQLite: " + err.Error())
+		}
+
+		// Limitazione delle connessioni per SQLite
+		sqlDB, err := db.DB()
+		if err == nil {
+			sqlDB.SetMaxOpenConns(1)
+		}
 	}
 
 	// Migrazione dello schema per il modello Record
 	if err := db.AutoMigrate(&Record{}); err != nil {
 		return errors.New("Errore nella migrazione del database: " + err.Error())
-	}
-
-	// Limitazione delle connessioni per SQLite
-	sqlDB, err := db.DB()
-	if err == nil {
-		sqlDB.SetMaxOpenConns(1)
 	}
 
 	// Inizializzazione delle colonne
