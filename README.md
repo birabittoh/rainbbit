@@ -38,6 +38,10 @@ Generates a custom SVG plot for temperature.
 
 ### GET /api/pressure
 Generates a custom SVG plot for pressure.
+
+### GET /health
+Health check endpoint. Performs a `SELECT 1` on the database and returns `204 No Content` if successful.
+
 ## Instructions
 First of all, create your own `.env` file:
 ```sh
