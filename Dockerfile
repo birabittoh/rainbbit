@@ -23,8 +23,6 @@ RUN go test -v ./...
 
 FROM alpine:latest AS build-release-stage
 
-RUN apk --no-cache add curl
-
 WORKDIR /app
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
