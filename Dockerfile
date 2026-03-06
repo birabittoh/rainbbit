@@ -21,7 +21,7 @@ RUN CGO_ENABLED=0 go build -trimpath -o /dist/rainbbit
 FROM build-stage AS run-test-stage
 RUN go test -v ./...
 
-FROM scratch AS build-release-stage
+FROM alpine:latest AS build-release-stage
 
 WORKDIR /app
 

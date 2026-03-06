@@ -173,6 +173,10 @@ func getDataPoints(requestedMeasures []string, f, t *int64) (dp []DataPoint, err
 	return
 }
 
+func PingDB() error {
+	return db.Exec("SELECT 1").Error
+}
+
 func initDB() (err error) {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn != "" {

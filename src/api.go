@@ -358,6 +358,15 @@ func getAPIPressure(w http.ResponseWriter, r *http.Request) {
 	writePlot(w, b)
 }
 
+func getHealth(w http.ResponseWriter, r *http.Request) {
+	if err := PingDB(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func getIndex(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	palette := getPalette(q)
@@ -442,6 +451,8 @@ func getServeMux() *http.ServeMux {
 	s.HandleFunc("GET /api/plot/{measure}", getAPIPlot)
 	s.HandleFunc("GET /api/temp", getAPITemp)
 	s.HandleFunc("GET /api/pressure", getAPIPressure)
+
+	s.HandleFunc("GET /health", getHealth)
 
 	s.HandleFunc("GET /", getIndex)
 	s.HandleFunc("GET /records", getRecords)
